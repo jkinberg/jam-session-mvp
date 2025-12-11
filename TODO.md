@@ -111,10 +111,27 @@ We implemented **Option B** - environment variables with a build script:
 - [x] Added "End Session" button to stop sessions early
 - [x] Optimized layout to fit everything on one screen (no scrolling)
 - [x] Made all components more compact (smaller padding, tighter spacing)
+- [x] Added beat indicators to phone controllers with time-based sync
+
+### Musical Expressiveness Improvements ✅
+- [x] Reduced quantization from 16th to 8th notes (drums only)
+- [x] Removed quantization from bass for immediate, expressive play
+- [x] Removed quantization from chords for immediate, expressive play
+- [x] Added hold-to-sustain for bass (press and hold keys)
+- [x] Added hold-to-sustain for chords (press and hold pads)
+- [x] Added velocity sensitivity to drums (based on tap timing)
+- [x] Expanded chords from 4 to 6 options (Am, F, C, G, Em, Dm)
+- [x] Reduced bass button gaps for better touch targets (8px → 4px)
+
+### Technical Improvements ✅
+- [x] Implemented time-based beat synchronization (phones calculate beats locally)
+- [x] Fixed beat indicator sync issues between host and phones
+- [x] Fixed chord release functionality (chords now properly decay)
 
 ### Bug Fixes ✅
 - [x] Fixed visual metronome bug (now shows all 4 beats correctly)
 - [x] Fixed beat indicator data attributes (0-3 indexing)
+- [x] Fixed "Play Again" beat callback interference
 
 ---
 
@@ -129,8 +146,8 @@ We implemented **Option B** - environment variables with a build script:
 - [ ] Melody/lead synth (keyboard layout)
 - [ ] Additional percussion (shakers, cowbell, toms)
 - [ ] FX controller (filters, reverb, delays)
-- [ ] Bass improvements (octave selector, different sound options)
-- [ ] Drum improvements (more realistic samples, kick variations)
+- [ ] Bass improvements (octave selector, different sound options, optional quantization toggle)
+- [ ] Drum improvements (more realistic samples, kick variations, sequencer mode)
 
 ### UI/UX Improvements
 - [ ] Add player avatars/names display on host screen

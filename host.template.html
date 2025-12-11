@@ -591,7 +591,7 @@
         
         const SESSION_DURATION = 180; // 3 minutes in seconds
         const BPM = 120;
-        const QUANTIZE_SUBDIVISION = '16n'; // Quantize to 16th notes
+        const QUANTIZE_SUBDIVISION = '8n'; // Quantize to 8th notes (more immediate feel)
         
         // ============================================
         // STATE
@@ -673,7 +673,9 @@
             'Am': ['A2', 'C3', 'E3'],
             'F': ['F2', 'A2', 'C3'],
             'C': ['C2', 'E2', 'G2'],
-            'G': ['G2', 'B2', 'D3']
+            'G': ['G2', 'B2', 'D3'],
+            'Em': ['E2', 'G2', 'B2'],
+            'Dm': ['D2', 'F2', 'A2']
         };
         
         // Bass notes (C minor pentatonic for "no wrong notes")
@@ -691,42 +693,54 @@
         // PLAY SOUNDS (with quantization)
         // ============================================
         
-        function playDrum(note) {
+        function playDrum(note, velocity = 0.7) {
             const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);
-            
+
             switch(note) {
                 case 'kick':
-                    drumSynths.kick.triggerAttackRelease('C1', '8n', time);
+                    drumSynths.kick.triggerAttackRelease('C1', '8n', time, velocity);
                     break;
                 case 'snare':
-                    drumSynths.snare.triggerAttackRelease('8n', time);
+                    drumSynths.snare.triggerAttackRelease('8n', time, velocity);
                     break;
                 case 'hat':
-                    drumSynths.hat.triggerAttackRelease('C6', '32n', time);
+                    drumSynths.hat.triggerAttackRelease('C6', '32n', time, velocity * 0.8);
                     break;
                 case 'clap':
-                    drumSynths.clap.triggerAttackRelease('16n', time);
+                    drumSynths.clap.triggerAttackRelease('16n', time, velocity);
                     break;
             }
-            
+
             showActivity('drums');
             totalNotes++;
         }
         
-        function playBass(note) {
-            const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);
+        function playBass(note, action = 'on') {
             const actualNote = bassNotes[note] || 'C2';
-            bassSynth.triggerAttackRelease(actualNote, '8n', time);
-            showActivity('bass');
-            totalNotes++;
+
+            if (action === 'on') {
+                // Start sustaining the note (immediate, no quantization)
+                bassSynth.triggerAttack(actualNote);
+                showActivity('bass');
+                totalNotes++;
+            } else if (action === 'off') {
+                // Release the note (immediate, no quantization)
+                bassSynth.triggerRelease();
+            }
         }
         
-        function playChord(chord) {
-            const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);
+        function playChord(chord, action = 'on') {
             const notes = chordNotes[chord] || chordNotes['Am'];
-            chordSynth.triggerAttackRelease(notes, '2n', time);
-            showActivity('chords');
-            totalNotes++;
+
+            if (action === 'on') {
+                // Start sustaining the chord (immediate, no quantization)
+                chordSynth.triggerAttack(notes);
+                showActivity('chords');
+                totalNotes++;
+            } else if (action === 'off') {
+                // Release the specific chord notes (immediate, no quantization)
+                chordSynth.triggerRelease(notes);
+            }
         }
         
         // ============================================
@@ -919,13 +933,13 @@
                         updatePlayerStatus(data.instrument, false);
                         break;
                     case 'drums':
-                        if (isPlaying) playDrum(data.note);
+                        if (isPlaying) playDrum(data.note, data.velocity);
                         break;
                     case 'bass':
-                        if (isPlaying) playBass(data.note);
+                        if (isPlaying) playBass(data.note, data.action);
                         break;
                     case 'chords':
-                        if (isPlaying) playChord(data.chord);
+                        if (isPlaying) playChord(data.chord, data.action);
                         break;
                 }
             });
@@ -981,9 +995,15 @@
             // Start timer
             startTimer();
             
-            // Notify players
+            // Notify players with sync data
             if (channel) {
-                channel.publish('session', { type: 'session', status: 'playing', timeRemaining });
+                channel.publish('session', {
+                    type: 'session',
+                    status: 'playing',
+                    timeRemaining,
+                    startTime: Date.now(),  // For beat sync
+                    bpm: BPM                // For beat calculation
+                });
             }
         }
         

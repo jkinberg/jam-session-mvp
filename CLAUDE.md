@@ -25,7 +25,8 @@ HOST (TV/laptop)                    PHONES (controllers)
 ```
 
 - **All audio plays on host**, not on phones
-- **Quantization** snaps notes to 16th notes (sounds tight even with latency)
+- **Quantization** only for drums (8th notes); bass & chords play immediately for expressiveness
+- **Hold-to-sustain** on bass and chords for melodic/harmonic control
 - **URL params** determine instrument: `play.html?room=JAM4&instrument=drums`
 
 ---
@@ -34,8 +35,11 @@ HOST (TV/laptop)                    PHONES (controllers)
 
 | File | Purpose | Edit for... |
 |------|---------|-------------|
-| `host.html` | Shared screen, audio engine, visualizer | Adding sounds, changing synths, UI changes to TV display |
-| `play.html` | Phone controller, all 3 instrument UIs | Adding instruments, changing controls, phone UI |
+| `host.template.html` | Host screen template (with API key placeholder) | Adding sounds, changing synths, UI changes to TV display |
+| `play.template.html` | Phone controller template (with API key placeholder) | Adding instruments, changing controls, phone UI |
+| `build.py` | Build script that generates HTML from templates | Modifying build process |
+| `host.html` | Generated host file (gitignored) | Don't edit directly - edit the template |
+| `play.html` | Generated player file (gitignored) | Don't edit directly - edit the template |
 | `TECHNICAL_SPEC.md` | Detailed architecture docs | Reference only (update if making structural changes) |
 | `README.md` | User setup guide | Update if setup process changes |
 
@@ -91,10 +95,12 @@ const SESSION_DURATION = 180;  // Seconds (180 = 3 minutes)
 
 ### Changing Quantization
 
-In `host.html`:
+In `host.template.html`:
 ```javascript
-const QUANTIZE_SUBDIVISION = '16n';  // Try '8n' for 8th notes, '4n' for quarter
+const QUANTIZE_SUBDIVISION = '8n';  // Currently 8th notes (only used for drums)
 ```
+
+**Note:** Only drums use quantization. Bass and chords play immediately for expressive control. To add quantization to bass/chords, modify `playBass()` and `playChord()` to use `Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION)` as the time parameter.
 
 ---
 
@@ -106,10 +112,18 @@ const QUANTIZE_SUBDIVISION = '16n';  // Try '8n' for 8th notes, '4n' for quarter
 // Join
 { type: 'join', instrument: 'drums', name: 'Alex' }
 
-// Notes
-{ type: 'drums', note: 'kick' }      // 'kick', 'snare', 'hat', 'clap'
-{ type: 'bass', note: 'C' }          // 'C', 'D', 'E', 'F', 'G', 'A', 'B'
-{ type: 'chords', chord: 'Am' }      // 'Am', 'F', 'C', 'G'
+// Drums (with velocity)
+{ type: 'drums', note: 'kick', velocity: 0.8 }  // velocity: 0.0-1.0
+
+// Bass (with sustain action)
+{ type: 'bass', note: 'C', action: 'on' }   // Start note
+{ type: 'bass', note: 'C', action: 'off' }  // Release note
+// Notes: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
+
+// Chords (with sustain action)
+{ type: 'chords', chord: 'Am', action: 'on' }   // Start chord
+{ type: 'chords', chord: 'Am', action: 'off' }  // Release chord
+// Chords: 'Am', 'F', 'C', 'G', 'Em', 'Dm'
 ```
 
 ### Host → Players (topic: `host`)
@@ -121,7 +135,16 @@ const QUANTIZE_SUBDIVISION = '16n';  // Try '8n' for 8th notes, '4n' for quarter
 ### Host → Players (topic: `session`)
 
 ```javascript
-{ type: 'session', status: 'playing', timeRemaining: 180 }
+// Session start (includes sync data for beat indicators)
+{
+  type: 'session',
+  status: 'playing',
+  timeRemaining: 180,
+  startTime: 1234567890123,  // timestamp for beat sync
+  bpm: 120                    // beats per minute
+}
+
+// Session end
 { type: 'session', status: 'ended' }
 ```
 
@@ -143,8 +166,11 @@ Only two, both loaded from CDN:
 ## Testing Locally
 
 ```bash
+# Build the project (generates HTML from templates)
+python3 build.py
+
 # Start server
-python -m http.server 8000
+python3 -m http.server 8000
 
 # Host (open in browser)
 http://localhost:8000/host.html
@@ -157,6 +183,8 @@ http://localhost:8000/play.html?room=XXXX&instrument=chords
 
 Replace `XXXX` with room code shown on host screen.
 Replace `localhost` with your computer's IP for phone testing.
+
+**Important:** After editing template files, run `python3 build.py` to regenerate the HTML files.
 
 ---
 
@@ -171,11 +199,11 @@ Replace `localhost` with your computer's IP for phone testing.
 
 ## Things to Avoid
 
-1. **Don't add a build process** — keep it as simple HTML files
+1. **Don't add npm/webpack/bundlers** — we use a simple Python build script only
 2. **Don't add React/Vue/Svelte** — vanilla JS is fine for this scope
-3. **Don't split into many files** — 2 HTML files is intentional for simplicity
+3. **Don't split into many files** — 2 template files is intentional for simplicity
 4. **Don't add audio to phones** — centralized audio on host is a key design decision
-5. **Don't remove quantization** — it's what makes non-musicians sound good
+5. **Be careful with quantization** — drums use it for tight rhythm, but bass/chords are immediate for expressiveness
 
 ---
 
@@ -207,5 +235,8 @@ Here are example prompts that might be asked and how to approach them:
 **"Make the bass keys larger on mobile"**
 → Modify `.bass-key` CSS in play.html, adjust `flex: 1` or add explicit heights
 
-**"Add a 5th chord option"**
-→ Add to `chordNotes` in host.html, add button to chords UI in play.html `instrumentConfigs`
+**"Add more chords"**
+→ Add to `chordNotes` in host.template.html, add button to chords UI in play.template.html `instrumentConfigs`, adjust grid layout CSS if needed
+
+**"Make bass/chords use quantization like drums"**
+→ In host.template.html, modify `playBass()` and `playChord()` to add `const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);` and pass `time` to triggerAttack/triggerRelease calls

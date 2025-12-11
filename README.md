@@ -12,9 +12,9 @@ A minimal multiplayer music jam session where players use their phones as instru
 |-----------|-------------|
 | **Host device** | TV/laptop displays visualizer and plays ALL audio via Tone.js |
 | **Phone controllers** | Send note messages over WebSocket (no audio on phones) |
-| **Instruments** | Drums (4 pads), Bass (7 keys), Chords (4 pads) |
-| **Quantization** | All notes snap to 16th notes at 120 BPM |
-| **Musical constraints** | Bass = minor pentatonic, Chords = Am-F-C-G progression |
+| **Instruments** | Drums (4 pads), Bass (7 keys with sustain), Chords (6 pads with sustain) |
+| **Quantization** | Drums snap to 8th notes; Bass & Chords play immediately for expressive control |
+| **Musical constraints** | Bass = C minor pentatonic, Chords = Am-F-C-G-Em-Dm (all in C major/A minor) |
 
 ---
 
@@ -161,10 +161,10 @@ Once players are connected, click **"START HOST"** on the host screen:
 └─────────┘ └─────────┘ └─────────┘
 ```
 
-- **Phones send control messages** (e.g., `{type: 'drums', note: 'kick'}`)
+- **Phones send control messages** (e.g., `{type: 'drums', note: 'kick', velocity: 0.8}`)
 - **Host receives messages and plays sounds** via Tone.js
-- **All audio is quantized** to 16th notes for tight timing
-- **Beat indicator synced** across all devices
+- **Drums are quantized** to 8th notes; bass & chords play immediately for expressive control
+- **Beat indicators time-synced** across all devices using session start time
 
 ### Files
 
@@ -179,17 +179,19 @@ jam-mvp/
 
 | Instrument | Controls | Sound |
 |------------|----------|-------|
-| **Drums** 🥁 | 4 pads: Kick, Snare, Hi-Hat, Clap | Synthesized drums (MembraneSynth, NoiseSynth, MetalSynth) |
-| **Bass** 🎸 | 7 keys: C, D, E, F, G, A, B | MonoSynth with filter (notes mapped to minor scale) |
-| **Chords** 🎹 | 4 pads: Am, F, C, G | PolySynth playing 3-note chords |
+| **Drums** 🥁 | 4 pads: Kick, Snare, Hi-Hat, Clap | Synthesized drums with velocity sensitivity (MembraneSynth, NoiseSynth, MetalSynth) |
+| **Bass** 🎸 | 7 keys: C, D, E, F, G, A, B | MonoSynth with filter and hold-to-sustain (notes mapped to C minor pentatonic) |
+| **Chords** 🎹 | 6 pads: Am, F, C, G, Em, Dm | PolySynth playing 3-note chords with hold-to-sustain |
 
 ### Musical Constraints
 
 To make everything "sound good without trying":
-- All sounds are **quantized to 16th notes** (no off-beat mistakes)
+- **Drums** are **quantized to 8th notes** with velocity sensitivity for expressive rhythm
+- **Bass & Chords** play **immediately** (no quantization) for expressive, natural feel
 - Bass notes are **mapped to C minor pentatonic** (no wrong notes)
-- Chords are a **standard pop progression** (Am-F-C-G)
+- Chords are **6 diatonic options** in C major/A minor (Am, F, C, G, Em, Dm) - all work together
 - Fixed tempo of **120 BPM**
+- **Hold-to-sustain** on bass and chords for melodic/harmonic control
 
 ---
 
@@ -270,9 +272,9 @@ In `host.html`, modify the `chordNotes` object.
 - For lower latency, consider WebRTC (see Phone Party framework)
 - The quantization helps mask small delays
 
-### "Sounds are out of sync"
-- The 16th-note quantization should keep things tight
-- If issues persist, try reducing `QUANTIZE_SUBDIVISION` to `'8n'` (8th notes)
+### "Beat indicators not in sync between host and phones"
+- Beat indicators use time-based synchronization and should stay in sync
+- If drift occurs, try refreshing the phone browsers to resync
 
 ---
 

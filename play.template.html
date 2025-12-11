@@ -178,29 +178,32 @@
         
         .bass-keys {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             flex: 1;
         }
-        
+
         .bass-key {
             flex: 1;
-            border-radius: 12px;
+            min-height: 120px;
+            border-radius: 16px;
             border: none;
             background: linear-gradient(180deg, #6b21a8 0%, #581c87 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            padding-bottom: 20px;
+            padding: 24px 12px;
             font-weight: bold;
-            font-size: 18px;
-            color: rgba(255,255,255,0.8);
+            font-size: 24px;
+            color: rgba(255,255,255,0.9);
             cursor: pointer;
             transition: transform 0.05s, filter 0.05s;
             position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         
-        .bass-key:active {
+        .bass-key:active,
+        .bass-key.held {
             transform: scaleY(0.97);
             filter: brightness(1.4);
             background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
@@ -250,7 +253,7 @@
         
         .chords-controller {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 12px;
             flex: 1;
@@ -269,7 +272,8 @@
             overflow: hidden;
         }
         
-        .chord-pad:active {
+        .chord-pad:active,
+        .chord-pad.held {
             transform: scale(0.95);
             filter: brightness(1.3);
         }
@@ -301,7 +305,15 @@
         .chord-pad.g {
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
         }
-        
+
+        .chord-pad.em {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .chord-pad.dm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
         .chord-pad .ripple {
             position: absolute;
             inset: 0;
@@ -310,7 +322,8 @@
             transition: opacity 0.1s;
         }
         
-        .chord-pad:active .ripple {
+        .chord-pad:active .ripple,
+        .chord-pad.held .ripple {
             opacity: 1;
         }
         
@@ -491,6 +504,11 @@
         let channel = null;
         let isConnected = false;
         let sessionActive = false;
+
+        // Beat synchronization
+        let sessionStartTime = null;
+        let sessionBpm = 120;
+        let beatIntervalId = null;
         
         // ============================================
         // URL PARAMS
@@ -539,12 +557,37 @@
                 `,
                 setup: (sendFn) => {
                     document.querySelectorAll('.drum-pad').forEach(pad => {
+                        let lastTapTime = 0;
+
                         // Handle both touch and mouse
                         const handler = (e) => {
                             e.preventDefault();
                             const note = pad.dataset.note;
-                            sendFn({ type: 'drums', note });
+
+                            // Calculate velocity based on timing (faster taps = harder hits)
+                            const now = Date.now();
+                            const timeSinceLastTap = now - lastTapTime;
+                            let velocity = 0.7; // Default medium velocity
+
+                            if (timeSinceLastTap < 200) {
+                                // Rapid tap = harder hit
+                                velocity = 0.9 + Math.random() * 0.1;
+                            } else if (timeSinceLastTap < 500) {
+                                // Normal tap
+                                velocity = 0.7 + Math.random() * 0.2;
+                            } else {
+                                // Slow tap = softer hit
+                                velocity = 0.5 + Math.random() * 0.2;
+                            }
+
+                            lastTapTime = now;
+
+                            sendFn({ type: 'drums', note, velocity });
                             vibrate();
+
+                            // Visual feedback based on velocity
+                            const ripple = pad.querySelector('.ripple');
+                            ripple.style.opacity = velocity;
                         };
                         pad.addEventListener('touchstart', handler);
                         pad.addEventListener('mousedown', handler);
@@ -569,14 +612,37 @@
                 `,
                 setup: (sendFn) => {
                     document.querySelectorAll('.bass-key').forEach(key => {
-                        const handler = (e) => {
+                        const note = key.dataset.note;
+                        let isHolding = false;
+
+                        // Note on (start sustain)
+                        const startHandler = (e) => {
                             e.preventDefault();
-                            const note = key.dataset.note;
-                            sendFn({ type: 'bass', note });
+                            if (isHolding) return;
+                            isHolding = true;
+                            sendFn({ type: 'bass', note, action: 'on' });
                             vibrate();
+                            key.classList.add('held');
                         };
-                        key.addEventListener('touchstart', handler);
-                        key.addEventListener('mousedown', handler);
+
+                        // Note off (end sustain)
+                        const endHandler = (e) => {
+                            e.preventDefault();
+                            if (!isHolding) return;
+                            isHolding = false;
+                            sendFn({ type: 'bass', note, action: 'off' });
+                            key.classList.remove('held');
+                        };
+
+                        // Touch events
+                        key.addEventListener('touchstart', startHandler);
+                        key.addEventListener('touchend', endHandler);
+                        key.addEventListener('touchcancel', endHandler);
+
+                        // Mouse events (for desktop testing)
+                        key.addEventListener('mousedown', startHandler);
+                        key.addEventListener('mouseup', endHandler);
+                        key.addEventListener('mouseleave', endHandler);
                     });
                 }
             },
@@ -606,18 +672,51 @@
                             <div class="name">G</div>
                             <div class="notes">G-B-D</div>
                         </button>
+                        <button class="chord-pad em" data-chord="Em">
+                            <div class="ripple"></div>
+                            <div class="name">Em</div>
+                            <div class="notes">E-G-B</div>
+                        </button>
+                        <button class="chord-pad dm" data-chord="Dm">
+                            <div class="ripple"></div>
+                            <div class="name">Dm</div>
+                            <div class="notes">D-F-A</div>
+                        </button>
                     </div>
                 `,
                 setup: (sendFn) => {
                     document.querySelectorAll('.chord-pad').forEach(pad => {
-                        const handler = (e) => {
+                        const chord = pad.dataset.chord;
+                        let isHolding = false;
+
+                        // Chord on (start sustain)
+                        const startHandler = (e) => {
                             e.preventDefault();
-                            const chord = pad.dataset.chord;
-                            sendFn({ type: 'chords', chord });
+                            if (isHolding) return;
+                            isHolding = true;
+                            sendFn({ type: 'chords', chord, action: 'on' });
                             vibrate();
+                            pad.classList.add('held');
                         };
-                        pad.addEventListener('touchstart', handler);
-                        pad.addEventListener('mousedown', handler);
+
+                        // Chord off (release sustain)
+                        const endHandler = (e) => {
+                            e.preventDefault();
+                            if (!isHolding) return;
+                            isHolding = false;
+                            sendFn({ type: 'chords', chord, action: 'off' });
+                            pad.classList.remove('held');
+                        };
+
+                        // Touch events
+                        pad.addEventListener('touchstart', startHandler);
+                        pad.addEventListener('touchend', endHandler);
+                        pad.addEventListener('touchcancel', endHandler);
+
+                        // Mouse events (for desktop testing)
+                        pad.addEventListener('mousedown', startHandler);
+                        pad.addEventListener('mouseup', endHandler);
+                        pad.addEventListener('mouseleave', endHandler);
                     });
                 }
             }
@@ -654,10 +753,59 @@
         function updateTimer(seconds) {
             const minutes = Math.floor(seconds / 60);
             const secs = seconds % 60;
-            document.getElementById('timer').textContent = 
+            document.getElementById('timer').textContent =
                 `${minutes}:${secs.toString().padStart(2, '0')}`;
         }
-        
+
+        // ============================================
+        // BEAT SYNCHRONIZATION
+        // ============================================
+
+        function calculateCurrentBeat() {
+            if (!sessionStartTime) return 0;
+
+            const elapsed = (Date.now() - sessionStartTime) / 1000; // seconds
+            const beatsPerSecond = sessionBpm / 60;
+            const totalBeats = Math.floor(elapsed * beatsPerSecond);
+            return totalBeats % 4;
+        }
+
+        function startBeatSync(startTime, bpm) {
+            // Stop any existing interval
+            if (beatIntervalId) {
+                clearInterval(beatIntervalId);
+            }
+
+            sessionStartTime = startTime;
+            sessionBpm = bpm;
+
+            // Update beat indicator immediately
+            updateBeatIndicator(calculateCurrentBeat());
+
+            // Calculate interval - check 4x per quarter note for accuracy
+            const quarterNoteMs = (60 / bpm) * 1000;
+            const checkInterval = quarterNoteMs / 4;
+
+            let lastBeat = calculateCurrentBeat();
+
+            beatIntervalId = setInterval(() => {
+                const currentBeat = calculateCurrentBeat();
+                // Only update UI when beat actually changes
+                if (currentBeat !== lastBeat) {
+                    updateBeatIndicator(currentBeat);
+                    lastBeat = currentBeat;
+                }
+            }, checkInterval);
+        }
+
+        function stopBeatSync() {
+            if (beatIntervalId) {
+                clearInterval(beatIntervalId);
+                beatIntervalId = null;
+            }
+            sessionStartTime = null;
+        }
+
         // ============================================
         // CONNECTION
         // ============================================
@@ -710,8 +858,13 @@
                             if (data.timeRemaining !== undefined) {
                                 updateTimer(data.timeRemaining);
                             }
+                            // Start local beat synchronization
+                            if (data.startTime && data.bpm) {
+                                startBeatSync(data.startTime, data.bpm);
+                            }
                         } else if (data.status === 'ended') {
                             sessionActive = false;
+                            stopBeatSync();
                             showOverlay('endedOverlay');
                         }
                     }
