@@ -124,8 +124,7 @@ We implemented **Option B** - environment variables with a build script:
 - [x] Reduced bass button gaps for better touch targets (8px → 4px)
 
 ### Technical Improvements ✅
-- [x] Implemented time-based beat synchronization (phones calculate beats locally)
-- [x] Fixed beat indicator sync issues between host and phones
+- [x] Implemented time-based beat synchronization (phones calculate beats locally - improved but still has drift issues)
 - [x] Fixed chord release functionality (chords now properly decay)
 
 ### Bug Fixes ✅
@@ -138,6 +137,7 @@ We implemented **Option B** - environment variables with a build script:
 ## Feature Roadmap
 
 ### High Priority Features
+- [ ] **Fix beat indicator synchronization** - Current time-based sync still drifts between phones and host due to network latency. Needs a real-time solution with lower latency (possibly WebRTC or better calibration/re-sync mechanism)
 - [ ] Add tempo adjustment control on host screen (currently fixed at 120 BPM)
 - [ ] Add session recording/playback capability
 - [ ] Improve visualizer with more animations and effects

@@ -164,7 +164,7 @@ Once players are connected, click **"START HOST"** on the host screen:
 - **Phones send control messages** (e.g., `{type: 'drums', note: 'kick', velocity: 0.8}`)
 - **Host receives messages and plays sounds** via Tone.js
 - **Drums are quantized** to 8th notes; bass & chords play immediately for expressive control
-- **Beat indicators time-synced** across all devices using session start time
+- **Beat indicators** use time-based sync (improved but may drift slightly due to network latency)
 
 ### Files
 
@@ -273,8 +273,10 @@ In `host.html`, modify the `chordNotes` object.
 - The quantization helps mask small delays
 
 ### "Beat indicators not in sync between host and phones"
-- Beat indicators use time-based synchronization and should stay in sync
-- If drift occurs, try refreshing the phone browsers to resync
+- Beat indicators use time-based synchronization but may drift due to network latency
+- Current implementation has known sync issues that need improvement
+- Try refreshing phone browsers if drift is severe
+- For production use, a lower-latency solution (e.g., WebRTC) would be needed
 
 ---
 

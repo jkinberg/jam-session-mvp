@@ -140,13 +140,15 @@ const QUANTIZE_SUBDIVISION = '8n';  // Currently 8th notes (only used for drums)
   type: 'session',
   status: 'playing',
   timeRemaining: 180,
-  startTime: 1234567890123,  // timestamp for beat sync
+  startTime: 1234567890123,  // timestamp for beat sync (note: still has drift issues)
   bpm: 120                    // beats per minute
 }
 
 // Session end
 { type: 'session', status: 'ended' }
 ```
+
+**Note:** Beat synchronization currently uses time-based calculation but still has drift issues due to network latency. This is a known limitation that needs improvement (see TODO.md).
 
 ---
 
