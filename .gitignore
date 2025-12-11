@@ -1,0 +1,22 @@
+# Environment variables (contains secrets)
+.env
+
+# Generated HTML files (built from templates)
+host.html
+play.html
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
