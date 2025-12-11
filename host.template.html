@@ -605,6 +605,7 @@
         let currentBeat = 0;
         let totalNotes = 0;
         let customHost = ''; // For overriding localhost with actual IP
+        let beatEventId = null; // Store the scheduled beat callback ID
         
         const players = {
             drums: { connected: false, name: null },
@@ -811,6 +812,12 @@
             clearInterval(timerInterval);
             Tone.Transport.stop();
 
+            // Clear the beat callback
+            if (beatEventId !== null) {
+                Tone.Transport.clear(beatEventId);
+                beatEventId = null;
+            }
+
             // Hide end session button
             document.getElementById('endSessionBtn').classList.add('hidden');
 
@@ -936,9 +943,17 @@
             
             // Set up transport
             Tone.Transport.bpm.value = BPM;
-            
+
+            // Clear any existing beat callback
+            if (beatEventId !== null) {
+                Tone.Transport.clear(beatEventId);
+            }
+
+            // Reset beat counter
+            currentBeat = 0;
+
             // Beat callback - fires on every quarter note
-            Tone.Transport.scheduleRepeat((time) => {
+            beatEventId = Tone.Transport.scheduleRepeat((time) => {
                 // Update UI on main thread with current beat
                 Tone.Draw.schedule(() => {
                     updateBeatIndicator(currentBeat);
@@ -952,7 +967,10 @@
                 // Increment for next beat
                 currentBeat = (currentBeat + 1) % 4;
             }, '4n');
-            
+
+            // Reset transport position to start fresh
+            Tone.Transport.position = 0;
+
             // Start transport
             Tone.Transport.start();
             isPlaying = true;
