@@ -136,8 +136,47 @@ We implemented **Option B** - environment variables with a build script:
 
 ## Feature Roadmap
 
+### 🚀 Top Priority: WebRTC Migration
+
+**Goal:** Migrate from Ably to WebRTC for <50ms latency (vs current 100-300ms)
+
+**Status:** Planning Phase
+**Documentation:** See `WEBRTC_ARCHITECTURE.md` for complete implementation plan
+
+**Implementation Checklist:**
+- [x] Document architecture and migration plan
+- [x] Research scaling implications
+- [ ] Build signaling server (Node.js + Socket.io) - *~1 day*
+- [ ] Create proof of concept (minimal WebRTC demo) - *~1 day*
+- [ ] Implement feature flag abstraction layer - *~1 day*
+- [ ] Implement WebRTC adapters (host + player) - *~2-3 days*
+- [ ] Deploy signaling server to Railway.app - *~1 hour*
+- [ ] Integration testing (multiple devices/networks) - *~2-3 days*
+- [ ] Measure and compare latency (Ably vs WebRTC) - *~1 day*
+- [ ] Make go/no-go decision
+- [ ] Remove deprecated implementation - *~1 day*
+
+**Key Milestones:**
+- **Days 1-2:** Planning & setup ✅ (current)
+- **Day 3:** Signaling server + proof of concept
+- **Day 4:** Feature flag abstraction
+- **Days 5-7:** WebRTC integration (host & player)
+- **Days 8-10:** Real-world testing & validation
+- **Days 11-12:** Production rollout & decision
+- **Day 13+:** Cleanup (if proceeding with WebRTC)
+
+**Estimated Total Time:** ~2 weeks (with Claude Code assistance)
+
+**Success Criteria:**
+- Latency <50ms average
+- Connection success >95%
+- Beat sync drift <20ms
+- User feedback: "significantly better"
+
+**Fallback:** If WebRTC doesn't work (connection success <90%), fall back to self-hosted WebSocket server for better latency than Ably without WebRTC complexity.
+
 ### High Priority Features
-- [ ] **Fix beat indicator synchronization** - Current time-based sync still drifts between phones and host due to network latency. Needs a real-time solution with lower latency (possibly WebRTC or better calibration/re-sync mechanism)
+- [x] ~~**Fix beat indicator synchronization**~~ - Superseded by WebRTC migration above
 - [ ] Add tempo adjustment control on host screen (currently fixed at 120 BPM)
 - [ ] Add session recording/playback capability
 - [ ] Improve visualizer with more animations and effects

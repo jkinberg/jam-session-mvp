@@ -10,6 +10,8 @@ This file provides context for Claude Code, Cursor, and other AI coding assistan
 
 **Key constraint**: This is intentionally minimal. Resist the urge to add complexity, frameworks, or dependencies unless specifically requested.
 
+**⚠️ Important:** If working on latency, synchronization, or WebRTC features, **read `WEBRTC_ARCHITECTURE.md` first**. It contains the complete migration plan from Ably to WebRTC for <50ms latency.
+
 ---
 
 ## Quick Context
@@ -41,7 +43,9 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `host.html` | Generated host file (gitignored) | Don't edit directly - edit the template |
 | `play.html` | Generated player file (gitignored) | Don't edit directly - edit the template |
 | `TECHNICAL_SPEC.md` | Detailed architecture docs | Reference only (update if making structural changes) |
+| `WEBRTC_ARCHITECTURE.md` | **WebRTC migration plan** | **Read before implementing WebRTC/low-latency features** |
 | `README.md` | User setup guide | Update if setup process changes |
+| `TODO.md` | Feature roadmap and completed work | Track progress |
 
 ---
 
