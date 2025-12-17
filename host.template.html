@@ -897,7 +897,15 @@
         function updateJoinUrls() {
             // Determine the base URL to use
             let origin = customHost || window.location.origin;
-            const baseUrl = origin + window.location.pathname.replace('host.html', 'play.html');
+
+            // Handle both /host.html and / (index.html) paths
+            let pathname = window.location.pathname;
+            if (pathname.includes('host.html')) {
+                pathname = pathname.replace('host.html', 'play.html');
+            } else if (pathname === '/' || pathname.includes('index.html')) {
+                pathname = '/play.html';
+            }
+            const baseUrl = origin + pathname;
             const container = document.getElementById('joinUrls');
 
             // Show IP config warning if using localhost
