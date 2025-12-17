@@ -10,11 +10,20 @@ from pathlib import Path
 
 
 def load_env():
-    """Load environment variables from .env file"""
+    """Load environment variables from .env file or system environment"""
+    env_vars = {}
+
+    # First, try to load from system environment (for Vercel/CI)
+    if 'ABLY_API_KEY' in os.environ:
+        print("✓ Loading from system environment variables (Vercel/CI mode)")
+        env_vars['ABLY_API_KEY'] = os.environ['ABLY_API_KEY']
+        return env_vars
+
+    # Fall back to .env file (for local development)
     env_file = Path('.env')
 
     if not env_file.exists():
-        print("❌ Error: .env file not found!")
+        print("❌ Error: .env file not found and no environment variables set!")
         print("\nPlease create a .env file:")
         print("  1. Copy .env.example to .env")
         print("  2. Add your Ably API key to the .env file")
@@ -23,7 +32,7 @@ def load_env():
         print("  # Then edit .env and add your API key")
         sys.exit(1)
 
-    env_vars = {}
+    print("✓ Loading from .env file (local mode)")
     with open(env_file, 'r') as f:
         for line in f:
             line = line.strip()
