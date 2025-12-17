@@ -44,6 +44,7 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `play.html` | Generated player file (gitignored) | Don't edit directly - edit the template |
 | `TECHNICAL_SPEC.md` | Detailed architecture docs | Reference only (update if making structural changes) |
 | `WEBRTC_ARCHITECTURE.md` | **WebRTC migration plan** | **Read before implementing WebRTC/low-latency features** |
+| `ANALYTICS_PLAN.md` | **Analytics integration plan** | **Read before adding analytics tracking** |
 | `README.md` | User setup guide | Update if setup process changes |
 | `TODO.md` | Feature roadmap and completed work | Track progress |
 

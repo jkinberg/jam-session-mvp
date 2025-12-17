@@ -177,6 +177,33 @@ We implemented **Option B** - environment variables with a build script:
 **Fallback:** If WebRTC doesn't work (connection success <90%), fall back to self-hosted WebSocket server for better latency than Ably without WebRTC complexity.
 
 ### High Priority Features
+
+#### Analytics Integration (Product Validation)
+- [ ] Add Google Analytics 4 for product validation metrics
+- [ ] Track session creation, completion, and player engagement
+- [ ] Track technical issues (connection errors, latency)
+- [ ] Track survey conversion rates
+- [ ] **Documentation:** See `ANALYTICS_PLAN.md` for complete implementation plan
+
+**Key Metrics to Track:**
+- Session completion rate (goal: >70%)
+- Players per session (goal: >2 average)
+- Survey conversion rate (goal: >20%)
+- Technical error rate (goal: <5%)
+
+**Implementation Checklist:**
+- [ ] Create GA4 property and get Measurement ID
+- [ ] Add GA4_MEASUREMENT_ID to environment variables
+- [ ] Update build.py to inject Measurement ID
+- [ ] Integrate GA4 script into host.template.html
+- [ ] Integrate GA4 script into play.template.html
+- [ ] Add event tracking for key product validation events
+- [ ] Test with GA4 DebugView
+- [ ] Set up custom dashboards in GA4
+
+---
+
+#### Other High Priority Features
 - [x] ~~**Fix beat indicator synchronization**~~ - Superseded by WebRTC migration above
 - [ ] Add tempo adjustment control on host screen (currently fixed at 120 BPM)
 - [ ] Add session recording/playback capability
@@ -200,7 +227,7 @@ We implemented **Option B** - environment variables with a build script:
 - [ ] Add reconnection logic for dropped connections
 - [ ] Test on various mobile devices and browsers
 - [ ] Add accessibility improvements
-- [ ] Consider adding analytics (privacy-respecting)
+- [x] ~~Consider adding analytics (privacy-respecting)~~ - See Analytics Integration section above
 
 ### Documentation
 - [x] Add troubleshooting section to README
