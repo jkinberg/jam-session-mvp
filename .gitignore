@@ -4,6 +4,7 @@
 # Generated HTML files (built from templates)
 host.html
 play.html
+index.html
 
 # Python
 __pycache__/

@@ -87,9 +87,13 @@ def main():
     build_html_file('host.template.html', 'host.html', env_vars)
     build_html_file('play.template.html', 'play.html', env_vars)
 
+    # Also generate index.html from host template (for root URL access)
+    build_html_file('host.template.html', 'index.html', env_vars)
+
     print("\n✨ Build complete!")
     print("\nYou can now run the server:")
     print("  python3 -m http.server 8000")
+    print("  - Host screen: http://localhost:8000/ or http://localhost:8000/host.html")
 
 
 if __name__ == '__main__':
