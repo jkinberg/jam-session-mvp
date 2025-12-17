@@ -492,6 +492,35 @@
                 <div class="label">Players</div>
             </div>
         </div>
+
+        <!-- Survey Section with QR Code -->
+        <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <div style="color: #00d4ff; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
+                📋 Help us improve!
+            </div>
+            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 12px;">
+                Scan QR code or click link to share feedback (takes 3 min)
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+                <div style="background: white; padding: 8px; border-radius: 8px;">
+                    <img id="surveyQR" style="width: 100px; height: 100px;" alt="Survey QR Code">
+                </div>
+                <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" style="
+                    display: inline-block;
+                    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 14px;
+                    transition: transform 0.2s;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    📝 Take Survey
+                </a>
+            </div>
+        </div>
+
         <div class="buttons">
             <button class="play-again" id="playAgainBtn">Play Again</button>
             <button class="new-room" id="newRoomBtn">New Room</button>
@@ -840,6 +869,11 @@
             document.getElementById('statPlayers').textContent =
                 Object.values(players).filter(p => p.connected).length;
             document.getElementById('endOverlay').classList.remove('hidden');
+
+            // Generate survey QR code
+            const surveyQR = document.getElementById('surveyQR');
+            surveyQR.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' +
+                          encodeURIComponent('https://forms.gle/3KSkcUiae2DvfePr9');
 
             // Notify players
             if (channel) {
