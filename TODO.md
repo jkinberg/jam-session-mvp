@@ -45,18 +45,17 @@ We implemented **Option B** - environment variables with a build script:
 **Pros**: Secure, works well with CI/CD, standard practice
 **Cons**: Adds build step (but it's simple and fast)
 
-#### Option C: Restrict Ably Key Permissions (Defense in Depth)
-- [ ] Log into Ably dashboard
-- [ ] Create a new restricted API key with:
-  - [ ] Only `subscribe` and `publish` capabilities
-  - [ ] Channel restrictions to `jam-*` pattern only
-  - [ ] Rate limits configured
-  - [ ] Note: This doesn't prevent exposure, but limits damage
-- [ ] Replace current key in local files with restricted key
-- [ ] Document restrictions in README
+#### ✅ Option C: Restrict Ably Key Permissions (Defense in Depth) - IMPLEMENTED
+- [x] Log into Ably dashboard
+- [x] Create a new restricted API key with:
+  - [x] Only `subscribe` and `publish` capabilities (no admin, history, stats, etc.)
+  - [x] Added to Vercel production environment variables
+  - [x] Note: Limits potential damage from client-side key exposure
+- [x] Keep root key for local development only
 
 **Pros**: Additional security layer, easy to implement
 **Cons**: Doesn't solve exposure problem, only mitigates damage
+**Status**: ✅ Production uses restricted key; local dev uses root key for flexibility
 
 #### Option D: Add Backend for Token Auth (Production-Ready)
 - [ ] Research serverless options (Vercel Functions, Netlify Functions, AWS Lambda)
@@ -78,12 +77,14 @@ We implemented **Option B** - environment variables with a build script:
 ### Recommended Approach
 
 **For MVP/Testing:**
-- Implement Option A (template files) OR Option B (env vars + build script)
-- Add Option C (restricted keys) as additional protection
+- ✅ Implemented Option B (env vars + build script)
+- ✅ Implemented Option C (restricted keys for production)
+- Current setup: Vercel production uses restricted API key with limited capabilities
 
-**For Production:**
-- Implement Option D (token server) for real deployment
-- This is the only truly secure solution for public-facing apps
+**For Future Production (Post-WebRTC):**
+- Consider Option D (token server) for scaled production deployment
+- This is the most secure solution for high-traffic public-facing apps
+- May not be necessary for MVP/testing phase with restricted keys
 
 ### Decision Matrix
 

@@ -194,6 +194,65 @@ Replace `localhost` with your computer's IP for phone testing.
 
 ---
 
+## Deployment & Git Workflow
+
+**Live URL:** https://jam-mvp-xi.vercel.app
+
+The app is deployed on Vercel with **automatic deployments enabled**. This means:
+- ✅ Every push to `main` triggers a production deployment
+- ✅ Pull requests get preview deployments automatically
+- ⚠️ **Use feature branches** to avoid accidental production deploys
+
+### Recommended Workflow
+
+**For new features or experiments:**
+
+```bash
+# 1. Create a feature branch
+git checkout -b feature/my-feature
+
+# 2. Make changes and commit
+python3 build.py  # Rebuild after editing templates
+git add .
+git commit -m "Add new feature"
+git push origin feature/my-feature
+
+# 3. Test locally first
+python3 -m http.server 8000
+
+# 4. When ready to deploy, merge to main
+git checkout main
+git merge feature/my-feature
+git push origin main  # ← This triggers Vercel deployment
+```
+
+**For quick fixes that are ready to deploy immediately:**
+
+```bash
+# Make changes directly on main
+python3 build.py
+git add .
+git commit -m "Fix bug"
+git push origin main  # ← Deploys to production
+```
+
+### Manual Deployment
+
+If needed, you can deploy manually:
+
+```bash
+npx vercel --prod
+```
+
+### Important Notes
+
+- **Always run `python3 build.py`** before committing if you edited template files
+- **Test locally first** before pushing to `main`
+- **Generated files** (`host.html`, `play.html`) are gitignored - Vercel runs the build script during deployment
+- **Environment variables** are already injected during build (API keys are in the generated HTML files)
+
+---
+
 ## Code Style
 
 - **Vanilla JavaScript** — no TypeScript, no JSX

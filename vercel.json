@@ -1,0 +1,7 @@
+{
+  "buildCommand": "python3 build.py",
+  "devCommand": "python3 -m http.server 8000",
+  "installCommand": "echo 'No dependencies to install'",
+  "outputDirectory": ".",
+  "framework": null
+}

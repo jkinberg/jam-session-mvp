@@ -210,19 +210,63 @@ Replace `XXXX` with the room code shown on the host screen.
 
 ## Deploying for Real Testing
 
-### Option A: ngrok (Quick & Free)
+### Option A: Vercel (Recommended - Automatic Deployments)
+
+**Live URL:** https://jam-mvp-xi.vercel.app
+
+The app is deployed on Vercel with automatic deployments enabled:
+- **Every push to `main` branch** triggers a new production deployment
+- **Pull requests** get preview deployments automatically
+- **Free tier** includes HTTPS, custom domains, and 100GB bandwidth/month
+
+**First-time setup:**
+```bash
+# Install Vercel CLI (optional - only needed for manual deploys)
+npm install -g vercel
+
+# Deploy manually (if not using auto-deploy from GitHub)
+npx vercel --prod
+```
+
+**Recommended Git Workflow:**
+
+Since Vercel auto-deploys from `main`, use feature branches to avoid accidental deploys:
+
+```bash
+# Create a feature branch for your work
+git checkout -b feature/my-new-feature
+
+# Make changes, commit, and push to feature branch
+git add .
+git commit -m "Add new feature"
+git push origin feature/my-new-feature
+
+# When ready to deploy, merge to main
+git checkout main
+git merge feature/my-new-feature
+git push origin main  # This triggers a Vercel deployment
+```
+
+**To disable auto-deploy from main:**
+- Go to Vercel dashboard → Project Settings → Git
+- Configure which branches trigger deployments
+
+**Security Best Practice:**
+
+For production deployment on Vercel, use a **restricted Ably API key**:
+1. In Ably dashboard → API Keys → Create New Key
+2. Enable only: `Subscribe` and `Publish` capabilities (disable admin, history, stats, etc.)
+3. Add this restricted key to Vercel environment variables
+4. Keep your root key for local development only
+
+This limits potential damage if someone extracts the API key from client-side code.
+
+### Option B: ngrok (Quick & Free for Testing)
 
 1. Install ngrok: https://ngrok.com/download
 2. Run your local server: `python -m http.server 8000`
 3. In another terminal: `ngrok http 8000`
 4. Share the ngrok URL (e.g., `https://abc123.ngrok.io/host.html`)
-
-### Option B: Vercel/Netlify (Permanent)
-
-1. Create a GitHub repo with these files
-2. Connect to Vercel or Netlify
-3. Deploy (it's free for static sites)
-4. Share the URL with friends
 
 ---
 
