@@ -2,7 +2,7 @@
 
 A minimal multiplayer music jam session where players use their phones as instruments and a shared screen displays the visualizer and plays the audio.
 
-> **🤖 For AI Assistants (Claude Code, Cursor, etc.)**: See `TECHNICAL_SPEC.md` for detailed architecture, code structure, message protocols, and extension points. This README is user-facing setup documentation.
+> **🤖 For AI Assistants (Claude Code, Cursor, etc.)**: See `CLAUDE.md` for project instructions, `TECHNICAL_SPEC.md` for detailed architecture, and `ROADMAP.md` for feature prioritization. This README is user-facing setup documentation.
 
 ---
 
@@ -32,10 +32,12 @@ jam-mvp/
 ├── play.html               # Generated phone controller (not committed to git)
 ├── index.html              # Generated index (same as host, not committed)
 ├── README.md               # This file (user setup guide)
-├── TODO.md                 # Project TODO list and feature roadmap
+├── TODO.md                 # Project TODO list and task tracking
+├── ROADMAP.md              # Product roadmap and feature prioritization
 ├── CLAUDE.md               # Instructions for AI assistants
 ├── TECHNICAL_SPEC.md       # Detailed technical documentation
 ├── ANALYTICS_PLAN.md       # Google Analytics integration plan
+├── GROOVE_FEEDBACK_PLAN.md # Groove meter & feedback system technical plan
 ├── WEBRTC_ARCHITECTURE.md  # WebRTC migration architecture (future)
 └── SURVEY_QUESTIONS.md     # User feedback survey questions
 ```
@@ -344,13 +346,17 @@ The survey collects feedback on:
 
 ## Next Steps
 
-If this MVP validates the concept, consider adding:
+See **ROADMAP.md** for comprehensive feature prioritization and implementation planning.
 
-1. **Visual polish** - Better visualizer, player avatars
-2. **More instruments** - Melody sequencer, turntable, FX controller
-3. **Session recording** - Save and share jams
-4. **Themes/sample packs** - Different musical styles
-5. **Lower latency** - Migrate to WebRTC (Phone Party framework)
+**Current Phase:** Feedback collection (waiting for 10-20 survey responses)
+
+**Planned improvements:**
+1. **Groove Meter & Feedback System** - Make it feel more game-like with goals and progression (see GROOVE_FEEDBACK_PLAN.md)
+2. **Analytics Integration** - Add Google Analytics for product validation metrics (see ANALYTICS_PLAN.md)
+3. **Lower latency** - Migrate to WebRTC for <50ms latency (see WEBRTC_ARCHITECTURE.md)
+4. **More instruments** - Melody sequencer, additional percussion, FX controller
+5. **Visual polish** - Better visualizer, player avatars, social sharing image
+6. **Session recording** - Save and share jam sessions
 
 ---
 
