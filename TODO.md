@@ -257,6 +257,17 @@ const limiter = new Tone.Limiter(-1);
 ---
 
 ### UI/UX Improvements
+- [ ] **Create social sharing thumbnail image** for Open Graph / Twitter Cards
+  - **Size:** 1200 x 630 pixels (Facebook/LinkedIn standard)
+  - **Format:** PNG or JPG (under 1MB)
+  - **Content suggestions:**
+    - App name: "Jam Session"
+    - Tagline: "Multiplayer Music Party Game" or "Turn Your Phones Into Instruments"
+    - Visual: Emoji instruments (🥁🎸🎹) or simple mockup
+    - Optional: Production URL
+  - **Filename:** `social-share.png`
+  - **Location:** Root directory (same level as index.html)
+  - **After creating:** Uncomment og:image and twitter:image meta tags in both templates
 - [ ] Add player avatars/names display on host screen
 - [ ] Add ability to save and share jam sessions
 - [ ] Better instrument control refinements
