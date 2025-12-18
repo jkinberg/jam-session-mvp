@@ -22,17 +22,22 @@ A minimal multiplayer music jam session where players use their phones as instru
 
 ```
 jam-mvp/
-├── host.template.html  # Host screen template (with placeholders)
-├── play.template.html  # Phone controller template (with placeholders)
-├── build.py            # Build script (generates HTML from templates)
-├── .env.example        # Example environment variables
-├── .env                # Your environment variables (not committed to git)
-├── host.html           # Generated host screen (not committed to git)
-├── play.html           # Generated phone controller (not committed to git)
-├── README.md           # This file (user setup guide)
-├── TODO.md             # Project TODO list and feature roadmap
-├── CLAUDE.md           # Instructions for AI assistants
-└── TECHNICAL_SPEC.md   # Detailed technical documentation for developers/AI
+├── host.template.html      # Host screen template (with placeholders)
+├── play.template.html      # Phone controller template (with placeholders)
+├── build.py                # Build script (generates HTML from templates)
+├── vercel.json             # Vercel deployment configuration
+├── .env.example            # Example environment variables
+├── .env                    # Your environment variables (not committed to git)
+├── host.html               # Generated host screen (not committed to git)
+├── play.html               # Generated phone controller (not committed to git)
+├── index.html              # Generated index (same as host, not committed)
+├── README.md               # This file (user setup guide)
+├── TODO.md                 # Project TODO list and feature roadmap
+├── CLAUDE.md               # Instructions for AI assistants
+├── TECHNICAL_SPEC.md       # Detailed technical documentation
+├── ANALYTICS_PLAN.md       # Google Analytics integration plan
+├── WEBRTC_ARCHITECTURE.md  # WebRTC migration architecture (future)
+└── SURVEY_QUESTIONS.md     # User feedback survey questions
 ```
 
 ---
@@ -68,7 +73,7 @@ Run the build script to generate the HTML files:
 python3 build.py
 ```
 
-This will create `host.html` and `play.html` from the templates with your API key injected.
+This will create `host.html`, `play.html`, and `index.html` from the templates with your API key injected.
 
 ### 4. Run Locally
 
@@ -93,12 +98,16 @@ Install the "Live Server" extension and click "Go Live"
 
 ### 5. Open the Host Screen
 
-On your laptop/TV, go to:
+On your laptop/TV, go to either:
+```
+http://localhost:8000/
+```
+or
 ```
 http://localhost:8000/host.html
 ```
 
-You'll see:
+Both URLs load the host screen. You'll see:
 - A 4-digit room code
 - **QR codes** for each instrument (Drums, Bass, Chords)
 - Join URLs for manual entry
@@ -165,23 +174,16 @@ Once players are connected, click **"START HOST"** on the host screen:
 - **Host receives messages and plays sounds** via Tone.js
 - **Drums are quantized** to 8th notes; bass & chords play immediately for expressive control
 - **Beat indicators** use time-based sync (improved but may drift slightly due to network latency)
-
-### Files
-
-```
-jam-mvp/
-├── host.html    # Shared screen (run on TV/laptop)
-├── play.html    # Phone controller (adapts to instrument)
-└── README.md    # This file
-```
+- **Stereo mixing** - Drums panned across stereo field for spatial separation
+- **Frequency separation** - Chords raised one octave to avoid clashing with bass
 
 ### Instruments
 
-| Instrument | Controls | Sound |
-|------------|----------|-------|
-| **Drums** 🥁 | 4 pads: Kick, Snare, Hi-Hat, Clap | Synthesized drums with velocity sensitivity (MembraneSynth, NoiseSynth, MetalSynth) |
-| **Bass** 🎸 | 7 keys: C, D, E, F, G, A, B | MonoSynth with filter and hold-to-sustain (notes mapped to C minor pentatonic) |
-| **Chords** 🎹 | 6 pads: Am, F, C, G, Em, Dm | PolySynth playing 3-note chords with hold-to-sustain |
+| Instrument | Controls | Sound | Mix Position |
+|------------|----------|-------|--------------|
+| **Drums** 🥁 | 4 pads: Kick, Snare, Hi-Hat, Clap | Synthesized drums with velocity sensitivity (MembraneSynth, NoiseSynth, MetalSynth) | Kick: Center, Snare: Left, Hat: Right, Clap: Left |
+| **Bass** 🎸 | 7 keys: C, D, E, F, G, A, B | MonoSynth with filter and hold-to-sustain (notes mapped to C minor pentatonic, octave 2) | Center (foundation) |
+| **Chords** 🎹 | 6 pads: Am, F, C, G, Em, Dm | PolySynth playing 3-note chords with hold-to-sustain (octaves 3-4) | Slight right |
 
 ### Musical Constraints
 
@@ -273,25 +275,29 @@ This limits potential damage if someone extracts the API key from client-side co
 ## Customization Ideas
 
 ### Change the Tempo
-In `host.html`, find:
+In `host.template.html`, find:
 ```javascript
 const BPM = 120;
 ```
+Then run `python3 build.py` to regenerate files.
 
 ### Change Session Length
-In `host.html`, find:
+In `host.template.html`, find:
 ```javascript
 const SESSION_DURATION = 180; // 3 minutes in seconds
 ```
+Then run `python3 build.py` to regenerate files.
 
 ### Add More Drum Sounds
-In `host.html`, add to `drumSynths` object and update `playDrum()` function.
+In `host.template.html`, add to `drumSynths` object and update `playDrum()` function, then rebuild.
 
 ### Change the Scale
-In `host.html`, modify the `bassNotes` object to use different notes.
+In `host.template.html`, modify the `bassNotes` object to use different notes, then rebuild.
 
 ### Change Chord Progression
-In `host.html`, modify the `chordNotes` object.
+In `host.template.html`, modify the `chordNotes` object, then rebuild.
+
+**Note:** Always edit the `.template.html` files, not the generated `.html` files, then run `python3 build.py`.
 
 ---
 
@@ -306,10 +312,7 @@ In `host.html`, modify the `chordNotes` object.
 - Make sure both devices are on the same WiFi network
 - If using `localhost`, enter your computer's IP in the orange warning box on the host screen
 - Check that you're using your computer's local IP, not `localhost`
-- Verify the Ably API key is correct in both files
-
-### "Only beats 1 and 3 are lighting up"
-- This was a bug that has been fixed - update to the latest version of the code
+- Verify the Ably API key is correct and properly injected by the build script
 
 ### "High latency / delay"
 - This MVP uses a cloud service (Ably) which adds some latency
@@ -321,6 +324,21 @@ In `host.html`, modify the `chordNotes` object.
 - Current implementation has known sync issues that need improvement
 - Try refreshing phone browsers if drift is severe
 - For production use, a lower-latency solution (e.g., WebRTC) would be needed
+
+---
+
+## User Feedback
+
+The app includes an integrated feedback survey that appears automatically at the end of each session:
+- **Host screen:** QR code and link button on end overlay
+- **Player screens:** "Share Feedback" button on end overlay
+- **Survey URL:** https://forms.gle/3KSkcUiae2DvfePr9
+
+The survey collects feedback on:
+- Core experience (fun factor, would you play with friends)
+- Technical performance (timing, responsiveness)
+- Instrument feel and improvements needed
+- Overall product validation
 
 ---
 

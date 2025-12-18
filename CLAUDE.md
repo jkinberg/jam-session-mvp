@@ -71,29 +71,35 @@ HOST (TV/laptop)                    PHONES (controllers)
 
 ### Changing Sounds
 
-All synths are defined in `host.html`. Look for:
-- `drumSynths` object — kick, snare, hat, clap
-- `bassSynth` — MonoSynth with filter
-- `chordSynth` — PolySynth
+All synths are defined in `host.template.html`. Look for:
+- `drumSynths` object — kick, snare, hat, clap (with stereo panning)
+- `bassSynth` — MonoSynth with filter (centered)
+- `chordSynth` — PolySynth (slight right panning)
+
+**Audio Mixing Notes:**
+- Drums use stereo panning: kick center, snare left (-0.2), hat right (0.4), clap left (-0.3)
+- Chords are in octaves 3-4 (raised from 2-3 to avoid bass frequency clash)
+- Volume hierarchy: kick/bass loudest (foundation) → snare/clap → chords → hats
+- All sustained notes are released in `endSession()` and `startSession()` to prevent stuck notes
 
 Tone.js docs: https://tonejs.github.io/docs/
 
 ### Changing Musical Scale
 
-In `host.html`, modify:
-- `bassNotes` object — maps UI keys to actual pitches
-- `chordNotes` object — maps chord names to note arrays
+In `host.template.html`, modify:
+- `bassNotes` object — maps UI keys to actual pitches (currently C minor pentatonic in octave 2)
+- `chordNotes` object — maps chord names to note arrays (currently octaves 3-4)
 
 ### Changing Tempo
 
-In `host.html`:
+In `host.template.html`:
 ```javascript
 const BPM = 120;  // Change this value
 ```
 
 ### Changing Session Duration
 
-In `host.html`:
+In `host.template.html`:
 ```javascript
 const SESSION_DURATION = 180;  // Seconds (180 = 3 minutes)
 ```
