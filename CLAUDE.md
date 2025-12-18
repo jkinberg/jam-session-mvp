@@ -46,8 +46,9 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `WEBRTC_ARCHITECTURE.md` | **WebRTC migration plan** | **Read before implementing WebRTC/low-latency features** |
 | `ANALYTICS_PLAN.md` | **Analytics integration plan** | **Read before adding analytics tracking** |
 | `GROOVE_FEEDBACK_PLAN.md` | **Groove meter & feedback system plan** | **Read before implementing game-like feedback features** |
+| `ROADMAP.md` | **Product roadmap & feature prioritization** | **Read for strategic planning and "what to build next" decisions** |
 | `README.md` | User setup guide | Update if setup process changes |
-| `TODO.md` | Feature roadmap and completed work | Track progress |
+| `TODO.md` | Task tracking and implementation checklists | Track specific implementation tasks |
 
 ---
 
