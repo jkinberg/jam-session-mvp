@@ -205,6 +205,8 @@ We implemented **Option B** - environment variables with a build script:
 
 #### Other High Priority Features
 - [x] ~~**Fix beat indicator synchronization**~~ - Superseded by WebRTC migration above
+- [x] **Improve sound mixing (Quick fixes)** - Added panning, rebalanced volumes, raised chord octaves ✅
+- [ ] **Improve sound mixing (Full upgrade)** - Add master effects and advanced processing
 - [ ] Add tempo adjustment control on host screen (currently fixed at 120 BPM)
 - [ ] Add session recording/playback capability
 - [ ] Improve visualizer with more animations and effects
@@ -215,6 +217,44 @@ We implemented **Option B** - environment variables with a build script:
 - [ ] FX controller (filters, reverb, delays)
 - [ ] Bass improvements (octave selector, different sound options, optional quantization toggle)
 - [ ] Drum improvements (more realistic samples, kick variations, sequencer mode)
+
+### Sound & Music Improvements
+
+#### Full Mixing Upgrade (Option B)
+**Goal:** Professional-quality sound mixing with master effects chain
+
+**Completed (Option A - Quick Fixes):** ✅
+- [x] Added stereo panning (kick center, snare left, hat right, clap left)
+- [x] Raised chord octaves (3-4 instead of 2-3) to avoid bass frequency clash
+- [x] Rebalanced volumes for better mix hierarchy
+
+**Remaining (Option B - Full Upgrade):**
+- [ ] Add master reverb bus for spatial depth
+- [ ] Add master compressor to glue instruments together
+- [ ] Add master limiter to prevent clipping
+- [ ] Add high-pass filter to chords (cut below 200Hz)
+- [ ] Add EQ to each instrument for frequency carving
+- [ ] Add subtle chorus effect to chords for width
+- [ ] Consider adding sidechain compression (kick ducking bass)
+
+**Technical Implementation:**
+```javascript
+// Master effects chain example:
+const reverb = new Tone.Reverb({ decay: 2, wet: 0.2 });
+const compressor = new Tone.Compressor({ threshold: -20, ratio: 3 });
+const limiter = new Tone.Limiter(-1);
+
+// Route all instruments through master chain
+// instrument → reverb → compressor → limiter → destination
+```
+
+**Expected improvements:**
+- More cohesive, professional sound
+- Better separation between instruments
+- Fuller, more spacious mix
+- Prevents volume spikes and clipping
+
+---
 
 ### UI/UX Improvements
 - [ ] Add player avatars/names display on host screen

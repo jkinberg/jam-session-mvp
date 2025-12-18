@@ -647,19 +647,24 @@
         // ============================================
         
         // Drum samples using built-in synths (no external files needed)
+        // With stereo panning for better spatial mix
         const drumSynths = {
             kick: new Tone.MembraneSynth({
                 pitchDecay: 0.05,
                 octaves: 6,
                 oscillator: { type: 'sine' },
                 envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 }
-            }).toDestination(),
-            
+            }).chain(
+                new Tone.Panner(0).toDestination() // Center (kick is foundation)
+            ),
+
             snare: new Tone.NoiseSynth({
                 noise: { type: 'white' },
                 envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 }
-            }).toDestination(),
-            
+            }).chain(
+                new Tone.Panner(-0.2).toDestination() // Slight left
+            ),
+
             hat: new Tone.MetalSynth({
                 frequency: 400,
                 envelope: { attack: 0.001, decay: 0.1, release: 0.1 },
@@ -667,44 +672,52 @@
                 modulationIndex: 32,
                 resonance: 4000,
                 octaves: 1.5
-            }).toDestination(),
-            
+            }).chain(
+                new Tone.Panner(0.4).toDestination() // Right
+            ),
+
             clap: new Tone.NoiseSynth({
                 noise: { type: 'pink' },
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-            }).toDestination()
+            }).chain(
+                new Tone.Panner(-0.3).toDestination() // Left
+            )
         };
-        
-        // Bass synth
+
+        // Bass synth (centered, foundation)
         const bassSynth = new Tone.MonoSynth({
             oscillator: { type: 'sawtooth' },
             filter: { Q: 2, type: 'lowpass', rolloff: -24 },
             envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.8 },
             filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.8, baseFrequency: 100, octaves: 2.5 }
         }).toDestination();
-        
-        // Chord synth (polyphonic)
+
+        // Chord synth (polyphonic, slightly spread)
         const chordSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: 'triangle' },
             envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1 }
-        }).toDestination();
+        }).chain(
+            new Tone.Panner(0.1).toDestination() // Slight right to avoid bass clash
+        );
+
+        // Rebalanced volumes for better mix
+        // Kick and bass are foundation, everything else supports
+        drumSynths.kick.volume.value = -3;   // Louder - foundation
+        drumSynths.snare.volume.value = -8;  // Medium - backbeat
+        drumSynths.hat.volume.value = -14;   // Quieter - texture
+        drumSynths.clap.volume.value = -10;  // Medium-quiet - accent
+        bassSynth.volume.value = -6;         // Loud - groove foundation
+        chordSynth.volume.value = -12;       // Quieter - harmony support
         
-        // Set volumes
-        drumSynths.kick.volume.value = -6;
-        drumSynths.snare.volume.value = -10;
-        drumSynths.hat.volume.value = -15;
-        drumSynths.clap.volume.value = -12;
-        bassSynth.volume.value = -8;
-        chordSynth.volume.value = -10;
-        
-        // Chord definitions (in C minor scale for easy jamming)
+        // Chord definitions (in C major/A minor scale)
+        // Raised one octave to avoid clashing with bass frequencies
         const chordNotes = {
-            'Am': ['A2', 'C3', 'E3'],
-            'F': ['F2', 'A2', 'C3'],
-            'C': ['C2', 'E2', 'G2'],
-            'G': ['G2', 'B2', 'D3'],
-            'Em': ['E2', 'G2', 'B2'],
-            'Dm': ['D2', 'F2', 'A2']
+            'Am': ['A3', 'C4', 'E4'],
+            'F': ['F3', 'A3', 'C4'],
+            'C': ['C3', 'E3', 'G3'],
+            'G': ['G3', 'B3', 'D4'],
+            'Em': ['E3', 'G3', 'B3'],
+            'Dm': ['D3', 'F3', 'A3']
         };
         
         // Bass notes (C minor pentatonic for "no wrong notes")
