@@ -874,6 +874,11 @@
                 beatEventId = null;
             }
 
+            // Release all sustained notes (bass and chords)
+            // This prevents notes from continuing to play after session ends
+            bassSynth.triggerRelease();
+            chordSynth.releaseAll();
+
             // Hide end session button
             document.getElementById('endSessionBtn').classList.add('hidden');
 
@@ -1009,7 +1014,11 @@
         async function startSession() {
             // Initialize audio
             await Tone.start();
-            
+
+            // Release any sustained notes from previous session
+            bassSynth.triggerRelease();
+            chordSynth.releaseAll();
+
             // Set up transport
             Tone.Transport.bpm.value = BPM;
 
