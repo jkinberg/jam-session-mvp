@@ -178,6 +178,46 @@ We implemented **Option B** - environment variables with a build script:
 
 ### High Priority Features
 
+#### 🎮 Groove Meter & Feedback System (Game-like Engagement)
+**Status:** Planning Phase → Feature Branch Development
+**Documentation:** See `GROOVE_FEEDBACK_PLAN.md` for complete technical specification
+
+**Problem:** App feels like random button mashing with no goals, feedback, or sense of progression. "Notes played" metric is meaningless.
+
+**Solution:** Two-part feedback system:
+1. **Real-time Groove Meter** - Visual indicator of how well the group is playing together
+2. **Better End Screen Metrics** - Replace notes with meaningful performance scores (A-F grade, groove %, individual stars)
+
+**Development Approach:**
+- ⚠️ **Work in feature branch:** `feature/groove-meter-feedback`
+- Create pull request for review before merging to main
+- Use Vercel preview deployments for testing
+- First substantial feature using branch workflow
+
+**Implementation Checklist:**
+- [ ] Create feature branch
+- [ ] Phase 1: Implement groove meter scoring algorithm
+- [ ] Phase 1: Add groove meter UI to host screen
+- [ ] Phase 1: Add visual effects (pulse, particles, "LOCKED IN!")
+- [ ] Phase 2: Implement session stats tracking
+- [ ] Phase 2: Update end screen with new metrics
+- [ ] Phase 2: Generate per-instrument feedback
+- [ ] Testing: Solo, duo, full band scenarios
+- [ ] Testing: Performance and cross-device testing
+- [ ] Create PR and deploy to Vercel preview
+- [ ] Gather user feedback on preview
+- [ ] Merge to main when ready
+
+**Estimated Effort:** 2-3 days with Claude Code
+
+**Success Metrics:**
+- Players understand what makes "good" playing
+- Real-time feedback is encouraging and accurate
+- Players want to "beat their high score"
+- Experience feels more game-like and engaging
+
+---
+
 #### Analytics Integration (Product Validation)
 - [ ] Add Google Analytics 4 for product validation metrics
 - [ ] Track session creation, completion, and player engagement
