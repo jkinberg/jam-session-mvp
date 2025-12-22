@@ -27,6 +27,32 @@
 
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        // Only initialize GA4 if measurement ID is set
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, {
+                'anonymize_ip': true,
+                'allow_google_signals': false,
+                'allow_ad_personalization_signals': false
+            });
+        }
+
+        // Analytics helper function
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -526,7 +552,7 @@
                 <div style="background: white; padding: 8px; border-radius: 8px;">
                     <img id="surveyQR" style="width: 100px; height: 100px;" alt="Survey QR Code">
                 </div>
-                <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" style="
+                <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" id="hostSurveyLink" style="
                     display: inline-block;
                     background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
                     color: white;
@@ -884,7 +910,7 @@
             }, 1000);
         }
         
-        function endSession() {
+        function endSession(endedEarly = false) {
             isPlaying = false;
             clearInterval(timerInterval);
             Tone.Transport.stop();
@@ -903,10 +929,26 @@
             // Hide end session button
             document.getElementById('endSessionBtn').classList.add('hidden');
 
+            // Calculate session stats
+            const connectedPlayers = Object.values(players).filter(p => p.connected);
+            const totalPlayers = connectedPlayers.length;
+            const durationPlayed = SESSION_DURATION - timeRemaining;
+
+            // Track session end
+            trackEvent('session_ended', {
+                room_code: roomCode,
+                completion_type: endedEarly ? 'ended_early' : 'completed',
+                duration_seconds: durationPlayed,
+                total_players: totalPlayers,
+                total_notes: totalNotes,
+                drums_connected: players.drums.connected,
+                bass_connected: players.bass.connected,
+                chords_connected: players.chords.connected
+            });
+
             // Show end screen
             document.getElementById('statNotes').textContent = totalNotes;
-            document.getElementById('statPlayers').textContent =
-                Object.values(players).filter(p => p.connected).length;
+            document.getElementById('statPlayers').textContent = totalPlayers;
             document.getElementById('endOverlay').classList.remove('hidden');
 
             // Generate survey QR code
@@ -996,19 +1038,40 @@
         async function setupAbly() {
             if (ABLY_API_KEY === 'YOUR_ABLY_API_KEY_HERE') {
                 alert('Please add your Ably API key in host.html!\n\nGet a free key at: https://ably.com/sign-up');
+                trackEvent('connection_error', {
+                    error_type: 'missing_api_key',
+                    screen: 'host'
+                });
                 return false;
             }
-            
+
             const ably = new Ably.Realtime(ABLY_API_KEY);
             channel = ably.channels.get(`jam-${roomCode}`);
-            
+
+            // Handle connection errors
+            ably.connection.on('failed', (stateChange) => {
+                trackEvent('connection_error', {
+                    error_type: 'ably_connection_failed',
+                    error_message: stateChange.reason?.message || 'Unknown error',
+                    screen: 'host',
+                    room_code: roomCode
+                });
+            });
+
             // Listen for player messages
             channel.subscribe('player', (message) => {
                 const data = message.data;
-                
+
                 switch(data.type) {
                     case 'join':
                         updatePlayerStatus(data.instrument, true, data.name);
+                        // Track player join
+                        const newPlayerCount = Object.values(players).filter(p => p.connected).length;
+                        trackEvent('player_joined', {
+                            room_code: roomCode,
+                            instrument: data.instrument,
+                            player_count: newPlayerCount
+                        });
                         break;
                     case 'leave':
                         updatePlayerStatus(data.instrument, false);
@@ -1024,7 +1087,7 @@
                         break;
                 }
             });
-            
+
             return true;
         }
         
@@ -1101,6 +1164,11 @@
             roomCode = generateRoomCode();
             document.getElementById('roomCode').textContent = roomCode;
             updateJoinUrls();
+
+            // Track session creation
+            trackEvent('session_created', {
+                room_code: roomCode
+            });
             
             // Set up Ably
             const ablyReady = await setupAbly();
@@ -1109,6 +1177,14 @@
             // Start button handler
             document.getElementById('startBtn').addEventListener('click', async () => {
                 document.getElementById('startOverlay').classList.add('hidden');
+
+                // Track session start
+                const playerCount = Object.values(players).filter(p => p.connected).length;
+                trackEvent('session_started', {
+                    room_code: roomCode,
+                    player_count: playerCount
+                });
+
                 await startSession();
             });
             
@@ -1148,8 +1224,16 @@
             // End session button
             document.getElementById('endSessionBtn').addEventListener('click', () => {
                 if (confirm('Are you sure you want to end the session early?')) {
-                    endSession();
+                    endSession(true); // ended early
                 }
+            });
+
+            // Survey link tracking
+            document.getElementById('hostSurveyLink').addEventListener('click', () => {
+                trackEvent('survey_clicked', {
+                    source: 'host_end_screen',
+                    room_code: roomCode
+                });
             });
         }
 

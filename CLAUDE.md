@@ -44,7 +44,7 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `play.html` | Generated player file (gitignored) | Don't edit directly - edit the template |
 | `TECHNICAL_SPEC.md` | Detailed architecture docs | Reference only (update if making structural changes) |
 | `WEBRTC_ARCHITECTURE.md` | **WebRTC migration plan** | **Read before implementing WebRTC/low-latency features** |
-| `ANALYTICS_PLAN.md` | **Analytics integration plan** | **Read before adding analytics tracking** |
+| `ANALYTICS_PLAN.md` | Analytics integration plan (✅ implemented) | Reference for tracked events and GA4 configuration |
 | `GROOVE_FEEDBACK_PLAN.md` | **Groove meter & feedback system plan** | **Read before implementing game-like feedback features** |
 | `ROADMAP.md` | **Product roadmap & feature prioritization** | **Read for strategic planning and "what to build next" decisions** |
 | `README.md` | User setup guide | Update if setup process changes |
@@ -175,6 +175,48 @@ Only two, both loaded from CDN:
 | Ably | 1.x | Real-time WebSocket messaging |
 
 **Do not add npm, webpack, React, or any build tools unless explicitly requested.**
+
+---
+
+## Analytics (Google Analytics 4)
+
+**Status:** ✅ Implemented
+
+The app includes privacy-respecting analytics via Google Analytics 4. The measurement ID is stored in environment variables (`GA4_MEASUREMENT_ID`).
+
+### Helper Function
+
+Both templates include a `trackEvent()` helper:
+
+```javascript
+// Only fires if GA4_MEASUREMENT_ID is set
+trackEvent('event_name', { param1: 'value1', param2: 'value2' });
+```
+
+### Events Tracked
+
+| Event | Location | When |
+|-------|----------|------|
+| `session_created` | Host | Room code generated |
+| `session_started` | Host | START HOST clicked |
+| `player_joined` | Host | Player connects |
+| `session_ended` | Host | Timer ends or early end (includes duration, player count, completion type) |
+| `player_loaded` | Player | Player page loads |
+| `player_connected` | Player | Ably connection succeeds |
+| `survey_clicked` | Both | Survey link clicked |
+| `connection_error` | Both | Connection failures |
+
+### Adding New Events
+
+```javascript
+// In host.template.html or play.template.html
+trackEvent('your_event_name', {
+    room_code: roomCode,
+    custom_param: 'value'
+});
+```
+
+See `ANALYTICS_PLAN.md` for full documentation on GA4 configuration and dashboard setup.
 
 ---
 

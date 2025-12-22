@@ -17,6 +17,9 @@ def load_env():
     if 'ABLY_API_KEY' in os.environ:
         print("✓ Loading from system environment variables (Vercel/CI mode)")
         env_vars['ABLY_API_KEY'] = os.environ['ABLY_API_KEY']
+        # Also check for optional GA4 measurement ID
+        if 'GA4_MEASUREMENT_ID' in os.environ:
+            env_vars['GA4_MEASUREMENT_ID'] = os.environ['GA4_MEASUREMENT_ID']
         return env_vars
 
     # Fall back to .env file (for local development)
@@ -89,7 +92,17 @@ def main():
         print("❌ Error: Please set your actual Ably API key in .env file!")
         sys.exit(1)
 
-    print(f"✓ Found ABLY_API_KEY\n")
+    print(f"✓ Found ABLY_API_KEY")
+
+    # Check for optional GA4 measurement ID
+    if 'GA4_MEASUREMENT_ID' in env_vars and env_vars['GA4_MEASUREMENT_ID'] != 'G-XXXXXXXXXX':
+        print(f"✓ Found GA4_MEASUREMENT_ID (analytics enabled)")
+    else:
+        print("ℹ GA4_MEASUREMENT_ID not set (analytics disabled)")
+        # Set empty value so placeholder replacement still works
+        env_vars['GA4_MEASUREMENT_ID'] = ''
+
+    print()
 
     # Build HTML files
     print("🔨 Building HTML files from templates...")

@@ -350,13 +350,15 @@ See **ROADMAP.md** for comprehensive feature prioritization and implementation p
 
 **Current Phase:** Feedback collection (waiting for 10-20 survey responses)
 
+**Recently completed:**
+- ✅ **Analytics Integration** - Google Analytics 4 for product validation metrics (see ANALYTICS_PLAN.md)
+
 **Planned improvements:**
 1. **Groove Meter & Feedback System** - Make it feel more game-like with goals and progression (see GROOVE_FEEDBACK_PLAN.md)
-2. **Analytics Integration** - Add Google Analytics for product validation metrics (see ANALYTICS_PLAN.md)
-3. **Lower latency** - Migrate to WebRTC for <50ms latency (see WEBRTC_ARCHITECTURE.md)
-4. **More instruments** - Melody sequencer, additional percussion, FX controller
-5. **Visual polish** - Better visualizer, player avatars, social sharing image
-6. **Session recording** - Save and share jam sessions
+2. **Lower latency** - Migrate to WebRTC for <50ms latency (see WEBRTC_ARCHITECTURE.md)
+3. **More instruments** - Melody sequencer, additional percussion, FX controller
+4. **Visual polish** - Better visualizer, player avatars, social sharing image
+5. **Session recording** - Save and share jam sessions
 
 ---
 

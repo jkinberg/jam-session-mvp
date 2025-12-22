@@ -26,6 +26,32 @@
     <!-- <meta property="twitter:image" content="https://jam-mvp-xi.vercel.app/social-share.png"> -->
 
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        // Only initialize GA4 if measurement ID is set
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, {
+                'anonymize_ip': true,
+                'allow_google_signals': false,
+                'allow_ad_personalization_signals': false
+            });
+        }
+
+        // Analytics helper function
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -481,7 +507,7 @@
         <p>Great jam! Check the TV for stats.</p>
 
         <!-- Survey Button -->
-        <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" style="
+        <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" id="playerSurveyLink" style="
             display: block;
             background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
             color: white;
@@ -855,24 +881,41 @@
             roomCode = code.toUpperCase();
             instrument = inst;
             playerName = name;
-            
+
+            // Track player load attempt
+            trackEvent('player_loaded', {
+                instrument: instrument,
+                room_code: roomCode
+            });
+
             if (ABLY_API_KEY === 'YOUR_ABLY_API_KEY_HERE') {
                 alert('Please add your Ably API key in play.html!');
+                trackEvent('connection_error', {
+                    error_type: 'missing_api_key',
+                    screen: 'player',
+                    instrument: instrument
+                });
                 return false;
             }
-            
+
             try {
                 const ably = new Ably.Realtime(ABLY_API_KEY);
                 channel = ably.channels.get(`jam-${roomCode}`);
-                
+
                 // Wait for connection
                 await new Promise((resolve, reject) => {
                     ably.connection.on('connected', resolve);
                     ably.connection.on('failed', reject);
                     setTimeout(() => reject(new Error('Connection timeout')), 10000);
                 });
-                
+
                 isConnected = true;
+
+                // Track successful connection
+                trackEvent('player_connected', {
+                    instrument: instrument,
+                    room_code: roomCode
+                });
                 
                 // Send join message
                 channel.publish('player', {
@@ -928,6 +971,13 @@
                 
             } catch (err) {
                 console.error('Connection error:', err);
+                trackEvent('connection_error', {
+                    error_type: 'ably_connection_failed',
+                    error_message: err.message || 'Unknown error',
+                    screen: 'player',
+                    instrument: instrument,
+                    room_code: roomCode
+                });
                 return false;
             }
         }
@@ -1057,6 +1107,15 @@
 
                 // Player will automatically transition to mainUI when host
                 // broadcasts the new session start message
+            });
+
+            // Survey link tracking
+            document.getElementById('playerSurveyLink').addEventListener('click', () => {
+                trackEvent('survey_clicked', {
+                    source: 'player_end_screen',
+                    instrument: instrument,
+                    room_code: roomCode
+                });
             });
         }
         
