@@ -1,331 +1,132 @@
-# TODO - Jam Session MVP
+# TODO - Jam Session
 
-## ✅ RESOLVED: API Key Security (Completed!)
+## Current Focus: V1 Sequencer
 
-### Solution Implemented: Environment Variables + Build Script ✅
-
-We implemented **Option B** - environment variables with a build script:
-- ✅ Created `.env` file for local API keys
-- ✅ Created `.env.example` for documentation
-- ✅ Created `.gitignore` to exclude `.env` and generated HTML files
-- ✅ Created `host.template.html` and `play.template.html` with placeholders
-- ✅ Created `build.py` script to generate HTML files from templates
-- ✅ Updated README with build instructions
-
-**How it works:**
-1. Developers store API keys in `.env` (not committed)
-2. Run `python3 build.py` to generate HTML files
-3. Generated HTML files contain the API key but are gitignored
-4. Only template files are committed to Git (safe to share)
-
-### Original Options Considered
-
-#### Option A: Template Files + .gitignore (Quick Fix - No Build Process)
-- [ ] Create `host.template.html` (copy of host.html with placeholder key)
-- [ ] Create `play.template.html` (copy of play.html with placeholder key)
-- [ ] Create `.gitignore` file that excludes `host.html` and `play.html`
-- [ ] Update README.md with setup instructions for copying templates
-- [ ] Test that templates work correctly
-- [ ] Verify .gitignore prevents committing real files
-
-**Pros**: Simple, keeps "no build process" philosophy
-**Cons**: Manual setup required for each developer/deployment
-
-#### ✅ Option B: Environment Variables + Build Script (IMPLEMENTED)
-- [x] Create `.env` file with `ABLY_API_KEY=your-key-here`
-- [x] Add `.env` to `.gitignore`
-- [x] Create build script (`build.py`) that:
-  - [x] Reads environment variable from `.env` file
-  - [x] Injects it into HTML files
-  - [x] Generates `host.html` and `play.html`
-- [x] Update template files to use placeholder `__ABLY_API_KEY__`
-- [x] Update README with build/deploy instructions
-- [ ] Configure hosting platform (Vercel/Netlify) to inject env vars during deployment (future)
-
-**Pros**: Secure, works well with CI/CD, standard practice
-**Cons**: Adds build step (but it's simple and fast)
-
-#### ✅ Option C: Restrict Ably Key Permissions (Defense in Depth) - IMPLEMENTED
-- [x] Log into Ably dashboard
-- [x] Create a new restricted API key with:
-  - [x] Only `subscribe` and `publish` capabilities (no admin, history, stats, etc.)
-  - [x] Added to Vercel production environment variables
-  - [x] Note: Limits potential damage from client-side key exposure
-- [x] Keep root key for local development only
-
-**Pros**: Additional security layer, easy to implement
-**Cons**: Doesn't solve exposure problem, only mitigates damage
-**Status**: ✅ Production uses restricted key; local dev uses root key for flexibility
-
-#### Option D: Add Backend for Token Auth (Production-Ready)
-- [ ] Research serverless options (Vercel Functions, Netlify Functions, AWS Lambda)
-- [ ] Create token server endpoint that:
-  - [ ] Stores Ably API key server-side as environment variable
-  - [ ] Issues short-lived Ably tokens to clients
-  - [ ] Validates requests (rate limiting, channel restrictions)
-- [ ] Update `host.html` and `play.html` to:
-  - [ ] Request token from backend on load
-  - [ ] Use token instead of API key
-  - [ ] Handle token refresh
-- [ ] Deploy backend
-- [ ] Test end-to-end flow
-- [ ] Update deployment instructions
-
-**Pros**: Most secure, production-ready, prevents key exposure entirely
-**Cons**: Most complex, requires backend infrastructure
-
-### Recommended Approach
-
-**For MVP/Testing:**
-- ✅ Implemented Option B (env vars + build script)
-- ✅ Implemented Option C (restricted keys for production)
-- Current setup: Vercel production uses restricted API key with limited capabilities
-
-**For Future Production (Post-WebRTC):**
-- Consider Option D (token server) for scaled production deployment
-- This is the most secure solution for high-traffic public-facing apps
-- May not be necessary for MVP/testing phase with restricted keys
-
-### Decision Matrix
-
-| Option | Security | Simplicity | Best For |
-|--------|----------|------------|----------|
-| A - Templates | Low | High | Local dev, private repos |
-| B - Env Vars | Medium | Medium | Public repos, CI/CD deployments |
-| C - Restricted Keys | Low | High | Additional layer only |
-| D - Token Server | High | Low | Production apps |
-
-### Notes
-- If API key was already committed to Git history, must:
-  - [ ] Revoke/regenerate key in Ably dashboard
-  - [ ] Clean Git history OR start fresh repo
-- Current key should be treated as compromised if pushed to public repo
-- Consider if this app needs to be public at all (could use private repo initially)
+**Branch:** `feature/v1-sequencer`
+**Spec:** `v1-planning/V1_SEQUENCER_SPEC.md`
 
 ---
 
-## Recent Improvements (Completed)
+## V1 Implementation Checklist
 
-### UI/UX Enhancements ✅
-- [x] Added QR codes for easy phone joining (80x80px, scannable)
-- [x] Added IP address override for localhost (orange warning box on host)
-- [x] Added "End Session" button to stop sessions early
-- [x] Optimized layout to fit everything on one screen (no scrolling)
-- [x] Made all components more compact (smaller padding, tighter spacing)
-- [x] Added beat indicators to phone controllers with time-based sync
+### Phase 1: Foundation & Infrastructure
+- [ ] Archive V0 templates to `archive/` directory
+- [ ] Update `build.py` to generate multiple HTML files
+- [ ] Create new `host.template.html`:
+  - [ ] 4 instrument rows (drums, percussion, bass, chords)
+  - [ ] QR codes with instrument-specific URLs
+  - [ ] 16-step grid visualization per row
+  - [ ] Playhead animation at 120 BPM
+  - [ ] Timer display, room code, beat indicator
+- [ ] Ably connection setup
+- [ ] Session state structure for patterns
+- [ ] Row states (greyed out vs. active)
+- [ ] Tone.js Transport running (no audio yet)
 
-### Musical Expressiveness Improvements ✅
-- [x] Reduced quantization from 16th to 8th notes (drums only)
-- [x] Removed quantization from bass for immediate, expressive play
-- [x] Removed quantization from chords for immediate, expressive play
-- [x] Added hold-to-sustain for bass (press and hold keys)
-- [x] Added hold-to-sustain for chords (press and hold pads)
-- [x] Added velocity sensitivity to drums (based on tap timing)
-- [x] Expanded chords from 4 to 6 options (Am, F, C, G, Em, Dm)
-- [x] Reduced bass button gaps for better touch targets (8px → 4px)
+### Phase 2: Drums
+- [ ] Create `drums.template.html`:
+  - [ ] Sound selector (Kick, Snare, HiHat, Clap)
+  - [ ] 4×4 step grid
+  - [ ] Tap to place/remove/replace sounds
+  - [ ] Clear All button
+  - [ ] Beat indicator
+- [ ] Live mode: changes sent immediately
+- [ ] Host receives/stores drum patterns
+- [ ] Host renders drum pattern in grid
+- [ ] Host plays drum sounds on steps
+- [ ] Row flash animation on update
+- [ ] Player name display
+- [ ] Player disconnect handling
 
-### Technical Improvements ✅
-- [x] Implemented time-based beat synchronization (phones calculate beats locally - improved but still has drift issues)
-- [x] Fixed chord release functionality (chords now properly decay)
+### Phase 3: Percussion
+- [ ] Create `percussion.template.html` (same UI as drums)
+- [ ] Tone.js synths: Cowbell, Tambourine, Shaker, Conga
+- [ ] Host handles multiple instruments
+- [ ] Verify audio mixing
 
-### Bug Fixes ✅
-- [x] Fixed visual metronome bug (now shows all 4 beats correctly)
-- [x] Fixed beat indicator data attributes (0-3 indexing)
-- [x] Fixed "Play Again" beat callback interference
+### Phase 4: Chords
+- [ ] Create `chords.template.html`:
+  - [ ] 4 chord slots (beats 1-4, 5-8, 9-12, 13-16)
+  - [ ] Tap to cycle: Am → F → C → G → Am...
+  - [ ] "Send to Mix" button
+  - [ ] "In mix:" display
+  - [ ] Beat indicator
+- [ ] Draft vs. sent state
+- [ ] Host receives chord progressions
+- [ ] Host renders sustained chords
+- [ ] Host plays chords with sustain/release
 
----
+### Phase 5: Bass
+- [ ] Create `bass.template.html`:
+  - [ ] Two 8-column panels (steps 1-8, 9-16)
+  - [ ] 6 rows: A, G, F, E, D, C
+  - [ ] Tap to create/delete notes
+  - [ ] Clear button
+  - [ ] "Send to Mix" button
+- [ ] Host receives bass patterns with durations
+- [ ] Host renders variable-length notes
+- [ ] Host plays bass with sustain/release
 
-## Feature Roadmap
-
-### 🚀 Top Priority: WebRTC Migration
-
-**Goal:** Migrate from Ably to WebRTC for <50ms latency (vs current 100-300ms)
-
-**Status:** Planning Phase
-**Documentation:** See `WEBRTC_ARCHITECTURE.md` for complete implementation plan
-
-**Implementation Checklist:**
-- [x] Document architecture and migration plan
-- [x] Research scaling implications
-- [ ] Build signaling server (Node.js + Socket.io) - *~1 day*
-- [ ] Create proof of concept (minimal WebRTC demo) - *~1 day*
-- [ ] Implement feature flag abstraction layer - *~1 day*
-- [ ] Implement WebRTC adapters (host + player) - *~2-3 days*
-- [ ] Deploy signaling server to Railway.app - *~1 hour*
-- [ ] Integration testing (multiple devices/networks) - *~2-3 days*
-- [ ] Measure and compare latency (Ably vs WebRTC) - *~1 day*
-- [ ] Make go/no-go decision
-- [ ] Remove deprecated implementation - *~1 day*
-
-**Key Milestones:**
-- **Days 1-2:** Planning & setup ✅ (current)
-- **Day 3:** Signaling server + proof of concept
-- **Day 4:** Feature flag abstraction
-- **Days 5-7:** WebRTC integration (host & player)
-- **Days 8-10:** Real-world testing & validation
-- **Days 11-12:** Production rollout & decision
-- **Day 13+:** Cleanup (if proceeding with WebRTC)
-
-**Estimated Total Time:** ~2 weeks (with Claude Code assistance)
-
-**Success Criteria:**
-- Latency <50ms average
-- Connection success >95%
-- Beat sync drift <20ms
-- User feedback: "significantly better"
-
-**Fallback:** If WebRTC doesn't work (connection success <90%), fall back to self-hosted WebSocket server for better latency than Ably without WebRTC complexity.
-
-### High Priority Features
-
-#### 🎮 Groove Meter & Feedback System (Game-like Engagement)
-**Status:** Planning Phase → Feature Branch Development
-**Documentation:** See `GROOVE_FEEDBACK_PLAN.md` for complete technical specification
-
-**Problem:** App feels like random button mashing with no goals, feedback, or sense of progression. "Notes played" metric is meaningless.
-
-**Solution:** Two-part feedback system:
-1. **Real-time Groove Meter** - Visual indicator of how well the group is playing together
-2. **Better End Screen Metrics** - Replace notes with meaningful performance scores (A-F grade, groove %, individual stars)
-
-**Development Approach:**
-- ⚠️ **Work in feature branch:** `feature/groove-meter-feedback`
-- Create pull request for review before merging to main
-- Use Vercel preview deployments for testing
-- First substantial feature using branch workflow
-
-**Implementation Checklist:**
-- [ ] Create feature branch
-- [ ] Phase 1: Implement groove meter scoring algorithm
-- [ ] Phase 1: Add groove meter UI to host screen
-- [ ] Phase 1: Add visual effects (pulse, particles, "LOCKED IN!")
-- [ ] Phase 2: Implement session stats tracking
-- [ ] Phase 2: Update end screen with new metrics
-- [ ] Phase 2: Generate per-instrument feedback
-- [ ] Testing: Solo, duo, full band scenarios
-- [ ] Testing: Performance and cross-device testing
-- [ ] Create PR and deploy to Vercel preview
-- [ ] Gather user feedback on preview
-- [ ] Merge to main when ready
-
-**Estimated Effort:** 2-3 days with Claude Code
-
-**Success Metrics:**
-- Players understand what makes "good" playing
-- Real-time feedback is encouraging and accurate
-- Players want to "beat their high score"
-- Experience feels more game-like and engaging
+### Phase 6: Polish & Launch
+- [ ] Timer countdown (3:00 → 0:00)
+- [ ] "End Session" button
+- [ ] End screen with survey link
+- [ ] Visual polish (colors, animations, effects)
+- [ ] Mobile testing
+- [ ] TV/large screen testing
+- [ ] Analytics events (GA4)
+- [ ] Update README
+- [ ] Update CLAUDE.md
+- [ ] Final user testing
+- [ ] Merge to main
 
 ---
 
-#### ✅ Analytics Integration (Product Validation) - COMPLETED December 2024
-- [x] Add Google Analytics 4 for product validation metrics
-- [x] Track session creation, completion, and player engagement
-- [x] Track technical issues (connection errors, latency)
-- [x] Track survey conversion rates
-- [x] **Documentation:** See `ANALYTICS_PLAN.md` for complete implementation plan
+## V0 Completed Work (Reference)
 
-**Key Metrics Being Tracked:**
-- Session completion rate (goal: >70%)
-- Players per session (goal: >2 average)
-- Survey conversion rate (goal: >20%)
-- Technical error rate (goal: <5%)
+The following was completed in V0 (tagged `v0`):
 
-**Implementation Checklist:**
-- [x] Create GA4 property and get Measurement ID
-- [x] Add GA4_MEASUREMENT_ID to environment variables (.env + Vercel)
-- [x] Update build.py to inject Measurement ID
-- [x] Integrate GA4 script into host.template.html
-- [x] Integrate GA4 script into play.template.html
-- [x] Add event tracking for key product validation events
-- [ ] Test with GA4 DebugView
-- [ ] Set up custom dashboards in GA4
+### Core Features
+- [x] Real-time trigger-based jam session
+- [x] 3 instruments: Drums, Bass, Chords
+- [x] QR codes for phone joining
+- [x] Hold-to-sustain for bass/chords
+- [x] Drum quantization to 8th notes
+- [x] Beat indicators on phones
 
----
+### Infrastructure
+- [x] Ably real-time messaging
+- [x] Environment variable build script
+- [x] Vercel deployment with auto-deploy
+- [x] Google Analytics 4 integration
+- [x] Restricted API keys for production
 
-#### Other High Priority Features
-- [x] ~~**Fix beat indicator synchronization**~~ - Superseded by WebRTC migration above
-- [x] **Improve sound mixing (Quick fixes)** - Added panning, rebalanced volumes, raised chord octaves ✅
-- [ ] **Improve sound mixing (Full upgrade)** - Add master effects and advanced processing
-- [ ] Add tempo adjustment control on host screen (currently fixed at 120 BPM)
-- [ ] Add session recording/playback capability
-- [ ] Improve visualizer with more animations and effects
-
-### New Instruments to Add
-- [ ] Melody/lead synth (keyboard layout)
-- [ ] Additional percussion (shakers, cowbell, toms)
-- [ ] FX controller (filters, reverb, delays)
-- [ ] Bass improvements (octave selector, different sound options, optional quantization toggle)
-- [ ] Drum improvements (more realistic samples, kick variations, sequencer mode)
-
-### Sound & Music Improvements
-
-#### Full Mixing Upgrade (Option B)
-**Goal:** Professional-quality sound mixing with master effects chain
-
-**Completed (Option A - Quick Fixes):** ✅
-- [x] Added stereo panning (kick center, snare left, hat right, clap left)
-- [x] Raised chord octaves (3-4 instead of 2-3) to avoid bass frequency clash
-- [x] Rebalanced volumes for better mix hierarchy
-
-**Remaining (Option B - Full Upgrade):**
-- [ ] Add master reverb bus for spatial depth
-- [ ] Add master compressor to glue instruments together
-- [ ] Add master limiter to prevent clipping
-- [ ] Add high-pass filter to chords (cut below 200Hz)
-- [ ] Add EQ to each instrument for frequency carving
-- [ ] Add subtle chorus effect to chords for width
-- [ ] Consider adding sidechain compression (kick ducking bass)
-
-**Technical Implementation:**
-```javascript
-// Master effects chain example:
-const reverb = new Tone.Reverb({ decay: 2, wet: 0.2 });
-const compressor = new Tone.Compressor({ threshold: -20, ratio: 3 });
-const limiter = new Tone.Limiter(-1);
-
-// Route all instruments through master chain
-// instrument → reverb → compressor → limiter → destination
-```
-
-**Expected improvements:**
-- More cohesive, professional sound
-- Better separation between instruments
-- Fuller, more spacious mix
-- Prevents volume spikes and clipping
+### Audio
+- [x] Tone.js synths for all instruments
+- [x] Stereo panning (kick center, snare left, hat right)
+- [x] Volume balancing
+- [x] Chord octave separation from bass
 
 ---
 
-### UI/UX Improvements
-- [ ] **Create social sharing thumbnail image** for Open Graph / Twitter Cards
-  - **Size:** 1200 x 630 pixels (Facebook/LinkedIn standard)
-  - **Format:** PNG or JPG (under 1MB)
-  - **Content suggestions:**
-    - App name: "Jam Session"
-    - Tagline: "Multiplayer Music Party Game" or "Turn Your Phones Into Instruments"
-    - Visual: Emoji instruments (🥁🎸🎹) or simple mockup
-    - Optional: Production URL
-  - **Filename:** `social-share.png`
-  - **Location:** Root directory (same level as index.html)
-  - **After creating:** Uncomment og:image and twitter:image meta tags in both templates
-- [ ] Add player avatars/names display on host screen
-- [ ] Add ability to save and share jam sessions
-- [ ] Better instrument control refinements
-- [ ] Add visual feedback for which players are active
+## Deferred (Post-V1)
 
-### Code Quality
-- [ ] Add error handling for network failures
-- [ ] Add reconnection logic for dropped connections
-- [ ] Test on various mobile devices and browsers
-- [ ] Add accessibility improvements
-- [x] ~~Consider adding analytics (privacy-respecting)~~ - ✅ Implemented (see Analytics Integration section above)
+These items are from V0 planning and may be revisited after V1:
 
-### Documentation
-- [x] Add troubleshooting section to README
-- [x] Document QR code feature
-- [x] Document IP address override feature
-- [x] Document "End Session" button
-- [ ] Document musical scale/chord choices in more detail
-- [ ] Add video demo/GIF to README
-- [ ] Create deployment guide for various platforms
-- [ ] Add screenshots of host and player screens
+- [ ] Groove meter & feedback system
+- [ ] Master effects chain (reverb, compressor, limiter)
+- [ ] WebRTC migration (less critical for pattern-based approach)
+- [ ] Session recording/playback
+- [ ] Challenge/tutorial mode
+- [ ] Additional instruments (melody synth, FX controller)
+- [ ] Tempo adjustment control
+- [ ] Social sharing image
+
+---
+
+## Notes
+
+- V1 is a significant rewrite; V0 code is archived for reference
+- Each phase should be committed and pushed before moving to next
+- Test on real phones during development, not just browser resize
+- Prioritize "does it work" over "is it pretty" in early phases

@@ -6,30 +6,45 @@ This file provides context for Claude Code, Cursor, and other AI coding assistan
 
 ## Project Summary
 
-**Jam Session** is a multiplayer music party game MVP. Players join via phones, tap virtual instruments, and all audio plays on a shared TV screen. The goal is to test whether collaborative music-making is fun before building a more complex product.
+**Jam Session** is a multiplayer music party game. Players join via phones, build looping patterns on virtual instruments, and all audio plays on a shared TV screen.
+
+**Current Status:** Developing V1 (Sequencer) on `feature/v1-sequencer` branch
+**V0 Tag:** `v0` — Previous real-time trigger-based version
 
 **Key constraint**: This is intentionally minimal. Resist the urge to add complexity, frameworks, or dependencies unless specifically requested.
 
-**⚠️ Important:** If working on latency, synchronization, or WebRTC features, **read `WEBRTC_ARCHITECTURE.md` first**. It contains the complete migration plan from Ably to WebRTC for <50ms latency.
+**V1 Spec:** See `v1-planning/V1_SEQUENCER_SPEC.md` for complete technical specification.
 
 ---
 
 ## Quick Context
 
+### V1 Architecture (Sequencer)
+
 ```
 HOST (TV/laptop)                    PHONES (controllers)
 ┌─────────────────┐                 ┌─────────────────┐
-│  host.html      │◄── Ably ───────│  play.html      │
-│  - Tone.js audio│    WebSocket   │  - Drum pads    │
-│  - Visualizer   │                │  - Bass keys    │
-│  - Beat sync    │                │  - Chord pads   │
-└─────────────────┘                └─────────────────┘
+│  host.html      │◄── Ably ───────│  drums.html     │
+│  - 16-step loop │    Patterns    │  - 4×4 grid     │
+│  - 4 inst rows  │                │  - Live mode    │
+│  - Tone.js      │                ├─────────────────┤
+│  - Visualizer   │                │  percussion.html│
+└─────────────────┘                │  - 4×4 grid     │
+                                   │  - Live mode    │
+                                   ├─────────────────┤
+                                   │  chords.html    │
+                                   │  - 4 slots      │
+                                   │  - Send to Mix  │
+                                   ├─────────────────┤
+                                   │  bass.html      │
+                                   │  - Piano roll   │
+                                   │  - Send to Mix  │
+                                   └─────────────────┘
 ```
 
-- **All audio plays on host**, not on phones
-- **Quantization** only for drums (8th notes); bass & chords play immediately for expressiveness
-- **Hold-to-sustain** on bass and chords for melodic/harmonic control
-- **URL params** determine instrument: `play.html?room=JAM4&instrument=drums`
+**Key Difference from V0:**
+- V0: Phone taps → network → host plays (timing depends on network)
+- V1: Phone edits pattern → host stores → host plays on beat (perfect timing)
 
 ---
 
@@ -37,193 +52,136 @@ HOST (TV/laptop)                    PHONES (controllers)
 
 | File | Purpose | Edit for... |
 |------|---------|-------------|
-| `host.template.html` | Host screen template (with API key placeholder) | Adding sounds, changing synths, UI changes to TV display |
-| `play.template.html` | Phone controller template (with API key placeholder) | Adding instruments, changing controls, phone UI |
-| `build.py` | Build script that generates HTML from templates | Modifying build process |
-| `host.html` | Generated host file (gitignored) | Don't edit directly - edit the template |
-| `play.html` | Generated player file (gitignored) | Don't edit directly - edit the template |
-| `TECHNICAL_SPEC.md` | Detailed architecture docs | Reference only (update if making structural changes) |
-| `WEBRTC_ARCHITECTURE.md` | **WebRTC migration plan** | **Read before implementing WebRTC/low-latency features** |
-| `ANALYTICS_PLAN.md` | Analytics integration plan (✅ implemented) | Reference for tracked events and GA4 configuration |
-| `GROOVE_FEEDBACK_PLAN.md` | **Groove meter & feedback system plan** | **Read before implementing game-like feedback features** |
-| `ROADMAP.md` | **Product roadmap & feature prioritization** | **Read for strategic planning and "what to build next" decisions** |
-| `README.md` | User setup guide | Update if setup process changes |
-| `TODO.md` | Task tracking and implementation checklists | Track specific implementation tasks |
+| `host.template.html` | Host screen with 4 instrument rows | Sequencer display, playhead, row rendering |
+| `drums.template.html` | Drums phone UI | 4×4 grid, sound selector, live mode |
+| `percussion.template.html` | Percussion phone UI | Latin sounds, same pattern as drums |
+| `chords.template.html` | Chords phone UI | 4-slot picker, Send to Mix |
+| `bass.template.html` | Bass phone UI | Piano roll, variable note lengths |
+| `build.py` | Build script | Adding new templates, env vars |
+| `v1-planning/V1_SEQUENCER_SPEC.md` | V1 technical spec | Architecture reference |
+| `TODO.md` | Task tracking | Implementation progress |
+| `ROADMAP.md` | Product roadmap | Strategic planning |
+| `archive/` | V0 templates | Reference only |
 
 ---
 
 ## Common Tasks
 
-### Adding a New Instrument
+### Adding Sounds to an Instrument
 
-1. **In `host.html`**:
-   - Add a new Tone.js synth in the audio setup section
-   - Add a `play[Name]()` function following the pattern of `playDrum()`, `playBass()`, `playChord()`
-   - Add a case to the message handler switch in `setupAbly()`
-   - Add a player card in the HTML (copy existing `instrument-card` div)
-   - Update the `players` state object
-   - Add join URL to `updateJoinUrls()`
+In the host template, add synth definition:
+```javascript
+const percussionSynths = {
+  cowbell: new Tone.MetalSynth({ frequency: 800 }),
+  // ... more sounds
+};
+```
 
-2. **In `play.html`**:
-   - Add an entry to the `instrumentConfigs` object with:
-     - `emoji`: Display emoji
-     - `name`: Display name
-     - `render()`: Returns HTML string for the controller UI
-     - `setup(sendFn)`: Attaches event listeners, calls `sendFn({...})` on interaction
+In the instrument template, add to sound selector and update pattern messages.
 
-### Changing Sounds
-
-All synths are defined in `host.template.html`. Look for:
-- `drumSynths` object — kick, snare, hat, clap (with stereo panning)
-- `bassSynth` — MonoSynth with filter (centered)
-- `chordSynth` — PolySynth (slight right panning)
-
-**Audio Mixing Notes:**
-- Drums use stereo panning: kick center, snare left (-0.2), hat right (0.4), clap left (-0.3)
-- Chords are in octaves 3-4 (raised from 2-3 to avoid bass frequency clash)
-- Volume hierarchy: kick/bass loudest (foundation) → snare/clap → chords → hats
-- All sustained notes are released in `endSession()` and `startSession()` to prevent stuck notes
-
-Tone.js docs: https://tonejs.github.io/docs/
-
-### Changing Musical Scale
-
-In `host.template.html`, modify:
-- `bassNotes` object — maps UI keys to actual pitches (currently C minor pentatonic in octave 2)
-- `chordNotes` object — maps chord names to note arrays (currently octaves 3-4)
-
-### Changing Tempo
+### Changing the Sequencer Loop
 
 In `host.template.html`:
 ```javascript
-const BPM = 120;  // Change this value
+const BPM = 120;           // Tempo
+const STEPS = 16;          // Steps per loop
+const SESSION_DURATION = 180; // Seconds
 ```
 
-### Changing Session Duration
+### Understanding Update Modes
 
-In `host.template.html`:
-```javascript
-const SESSION_DURATION = 180;  // Seconds (180 = 3 minutes)
-```
+**Live Mode (Drums, Percussion):**
+- Changes sent immediately on each tap
+- Pattern updates apply to next playthrough
 
-### Changing Quantization
-
-In `host.template.html`:
-```javascript
-const QUANTIZE_SUBDIVISION = '8n';  // Currently 8th notes (only used for drums)
-```
-
-**Note:** Only drums use quantization. Bass and chords play immediately for expressive control. To add quantization to bass/chords, modify `playBass()` and `playChord()` to use `Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION)` as the time parameter.
+**Draft → Send Mode (Chords, Bass):**
+- Edits are local until "Send to Mix" pressed
+- Allows building complete patterns before committing
 
 ---
 
-## Message Protocol
+## Message Protocol (V1)
 
-### Player → Host (topic: `player`)
-
-```javascript
-// Join
-{ type: 'join', instrument: 'drums', name: 'Alex' }
-
-// Drums (with velocity)
-{ type: 'drums', note: 'kick', velocity: 0.8 }  // velocity: 0.0-1.0
-
-// Bass (with sustain action)
-{ type: 'bass', note: 'C', action: 'on' }   // Start note
-{ type: 'bass', note: 'C', action: 'off' }  // Release note
-// Notes: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
-
-// Chords (with sustain action)
-{ type: 'chords', chord: 'Am', action: 'on' }   // Start chord
-{ type: 'chords', chord: 'Am', action: 'off' }  // Release chord
-// Chords: 'Am', 'F', 'C', 'G', 'Em', 'Dm'
-```
-
-### Host → Players (topic: `host`)
+### Phone → Host
 
 ```javascript
-{ type: 'beat', beat: 0 }  // 0, 1, 2, or 3
-```
+// Player joined
+{ type: "player_joined", instrument: "drums", player: "Julius" }
 
-### Host → Players (topic: `session`)
-
-```javascript
-// Session start (includes sync data for beat indicators)
+// Drums/Percussion pattern (Live mode - sent on each change)
 {
-  type: 'session',
-  status: 'playing',
-  timeRemaining: 180,
-  startTime: 1234567890123,  // timestamp for beat sync (note: still has drift issues)
-  bpm: 120                    // beats per minute
+  type: "pattern_update",
+  instrument: "drums",
+  player: "Julius",
+  pattern: [
+    { step: 0, sound: "kick" },
+    { step: 2, sound: "snare" },
+    // only steps with sounds
+  ]
 }
 
-// Session end
-{ type: 'session', status: 'ended' }
+// Chords pattern (Draft → Send mode)
+{
+  type: "pattern_update",
+  instrument: "chords",
+  player: "Jordan",
+  pattern: [
+    { step: 0, chord: "Am", duration: 4 },
+    { step: 4, chord: "F", duration: 4 },
+    // each chord spans 4 beats
+  ]
+}
+
+// Bass pattern (Draft → Send mode)
+{
+  type: "pattern_update",
+  instrument: "bass",
+  player: "Jovelle",
+  pattern: [
+    { step: 0, note: "C", duration: 3 },
+    { step: 5, note: "G", duration: 4 },
+    // variable durations
+  ]
+}
 ```
 
-**Note:** Beat synchronization currently uses time-based calculation but still has drift issues due to network latency. This is a known limitation that needs improvement (see TODO.md).
+### Host State Structure
+
+```javascript
+const sessionState = {
+  room: "XK7M",
+  bpm: 120,
+  currentStep: 0,        // 0-15
+  timeRemaining: 180,
+
+  instruments: {
+    drums: { player: "Julius", pattern: [...] },
+    percussion: { player: null, pattern: [] },
+    bass: { player: "Jovelle", pattern: [...] },
+    chords: { player: "Jordan", pattern: [...] }
+  }
+};
+```
 
 ---
 
 ## Dependencies
 
-Only two, both loaded from CDN:
+Only two external dependencies (CDN):
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Tone.js | 14.8.49 | Audio synthesis & scheduling |
+| Tone.js | 14.8.49 | Audio synthesis & sequencing |
 | Ably | 1.x | Real-time WebSocket messaging |
 
 **Do not add npm, webpack, React, or any build tools unless explicitly requested.**
 
 ---
 
-## Analytics (Google Analytics 4)
-
-**Status:** ✅ Implemented
-
-The app includes privacy-respecting analytics via Google Analytics 4. The measurement ID is stored in environment variables (`GA4_MEASUREMENT_ID`).
-
-### Helper Function
-
-Both templates include a `trackEvent()` helper:
-
-```javascript
-// Only fires if GA4_MEASUREMENT_ID is set
-trackEvent('event_name', { param1: 'value1', param2: 'value2' });
-```
-
-### Events Tracked
-
-| Event | Location | When |
-|-------|----------|------|
-| `session_created` | Host | Room code generated |
-| `session_started` | Host | START HOST clicked |
-| `player_joined` | Host | Player connects |
-| `session_ended` | Host | Timer ends or early end (includes duration, player count, completion type) |
-| `player_loaded` | Player | Player page loads |
-| `player_connected` | Player | Ably connection succeeds |
-| `survey_clicked` | Both | Survey link clicked |
-| `connection_error` | Both | Connection failures |
-
-### Adding New Events
-
-```javascript
-// In host.template.html or play.template.html
-trackEvent('your_event_name', {
-    room_code: roomCode,
-    custom_param: 'value'
-});
-```
-
-See `ANALYTICS_PLAN.md` for full documentation on GA4 configuration and dashboard setup.
-
----
-
 ## Testing Locally
 
 ```bash
-# Build the project (generates HTML from templates)
+# Build all HTML files from templates
 python3 build.py
 
 # Start server
@@ -232,127 +190,89 @@ python3 -m http.server 8000
 # Host (open in browser)
 http://localhost:8000/host.html
 
-# Players (open in separate tabs or on phone)
-http://localhost:8000/play.html?room=XXXX&instrument=drums
-http://localhost:8000/play.html?room=XXXX&instrument=bass
-http://localhost:8000/play.html?room=XXXX&instrument=chords
+# Instruments (open in separate tabs or on phone)
+http://localhost:8000/drums.html?room=XXXX
+http://localhost:8000/percussion.html?room=XXXX
+http://localhost:8000/chords.html?room=XXXX
+http://localhost:8000/bass.html?room=XXXX
 ```
 
 Replace `XXXX` with room code shown on host screen.
 Replace `localhost` with your computer's IP for phone testing.
 
-**Important:** After editing template files, run `python3 build.py` to regenerate the HTML files.
+**Important:** After editing template files, run `python3 build.py` to regenerate.
 
 ---
 
 ## Deployment & Git Workflow
 
 **Live URL:** https://jam-mvp-xi.vercel.app
+**Current Branch:** `feature/v1-sequencer`
 
-The app is deployed on Vercel with **automatic deployments enabled**. This means:
-- ✅ Every push to `main` triggers a production deployment
-- ✅ Pull requests get preview deployments automatically
-- ⚠️ **Use feature branches** to avoid accidental production deploys
+Vercel auto-deploys:
+- Push to `main` → production deployment
+- Push to feature branch → preview deployment
 
 ### Recommended Workflow
 
-**For new features or experiments:**
-
 ```bash
-# 1. Create a feature branch
-git checkout -b feature/my-feature
+# Work on V1 feature branch
+git checkout feature/v1-sequencer
 
-# 2. Make changes and commit
-python3 build.py  # Rebuild after editing templates
-git add .
-git commit -m "Add new feature"
-git push origin feature/my-feature
-
-# 3. Test locally first
-python3 -m http.server 8000
-
-# 4. When ready to deploy, merge to main
-git checkout main
-git merge feature/my-feature
-git push origin main  # ← This triggers Vercel deployment
-```
-
-**For quick fixes that are ready to deploy immediately:**
-
-```bash
-# Make changes directly on main
+# Make changes
 python3 build.py
 git add .
-git commit -m "Fix bug"
-git push origin main  # ← Deploys to production
+git commit -m "Phase X: description"
+git push origin feature/v1-sequencer
+
+# When V1 complete, merge to main
+git checkout main
+git merge feature/v1-sequencer
+git push origin main  # Deploys to production
 ```
-
-### Manual Deployment
-
-If needed, you can deploy manually:
-
-```bash
-npx vercel --prod
-```
-
-### Important Notes
-
-- **Always run `python3 build.py`** before committing if you edited template files
-- **Test locally first** before pushing to `main`
-- **Generated files** (`host.html`, `play.html`) are gitignored - Vercel runs the build script during deployment
-- **Environment variables** are already injected during build (API keys are in the generated HTML files)
 
 ---
 
 ## Code Style
 
 - **Vanilla JavaScript** — no TypeScript, no JSX
-- **Inline styles** — CSS is in `<style>` tags within each HTML file
-- **No modules** — everything in global scope (it's an MVP)
-- **Descriptive function names** — `playDrum()`, `updateBeatIndicator()`, `showActivity()`
+- **Inline styles** — CSS in `<style>` tags within each HTML file
+- **No modules** — everything in global scope (simple for MVP)
+- **Descriptive function names** — `playDrumSound()`, `updatePlayhead()`, `renderPattern()`
 
 ---
 
 ## Things to Avoid
 
-1. **Don't add npm/webpack/bundlers** — we use a simple Python build script only
+1. **Don't add npm/webpack/bundlers** — we use a simple Python build script
 2. **Don't add React/Vue/Svelte** — vanilla JS is fine for this scope
-3. **Don't split into many files** — 2 template files is intentional for simplicity
-4. **Don't add audio to phones** — centralized audio on host is a key design decision
-5. **Be careful with quantization** — drums use it for tight rhythm, but bass/chords are immediate for expressiveness
-
----
-
-## If You Need More Context
-
-Read `TECHNICAL_SPEC.md` for:
-- Detailed architecture diagrams
-- Complete state variable documentation
-- All function signatures
-- CSS architecture notes
-- Known limitations
-- Future extension ideas
+3. **Don't split into many JS files** — inline in HTML is intentional
+4. **Don't add audio to phones** — centralized audio on host is key
+5. **Don't over-engineer** — V1 is still an MVP, keep it simple
 
 ---
 
 ## Example Modification Requests
 
-Here are example prompts that might be asked and how to approach them:
+**"Add a new percussion sound"**
+→ Add synth to `percussionSynths` in host, add button to percussion UI
 
-**"Add a melody instrument"**
-→ See "Adding a New Instrument" section above
+**"Change the loop length to 8 steps"**
+→ Change `STEPS` constant, update UI grids, adjust duration calculations
 
-**"Make the drums sound more like real drums"**
-→ Modify `drumSynths` in host.html, consider using `Tone.Sampler` with audio files
+**"Make chords use live mode instead of send-to-mix"**
+→ Remove draft state, send pattern on each tap instead of button press
 
-**"Add a way to change tempo during the session"**
-→ Add UI controls on host, broadcast tempo changes to players, update `Tone.Transport.bpm.value`
+**"Add a 5th instrument slot"**
+→ Add row to host, create new template, update build.py, add synths
 
-**"Make the bass keys larger on mobile"**
-→ Modify `.bass-key` CSS in play.html, adjust `flex: 1` or add explicit heights
+---
 
-**"Add more chords"**
-→ Add to `chordNotes` in host.template.html, add button to chords UI in play.template.html `instrumentConfigs`, adjust grid layout CSS if needed
+## V0 Reference
 
-**"Make bass/chords use quantization like drums"**
-→ In host.template.html, modify `playBass()` and `playChord()` to add `const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);` and pass `time` to triggerAttack/triggerRelease calls
+V0 templates are archived in `archive/` directory. Key differences:
+- Single `play.html` for all instruments (V1 has separate files)
+- Real-time triggers instead of patterns
+- No sequencer visualization on host
+
+If you need to understand V0 behavior, check the archived templates.
