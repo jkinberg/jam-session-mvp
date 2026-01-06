@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Jam Session - Player</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Jam Session - Multiplayer Music Party Game">
+    <meta name="description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jam-mvp-xi.vercel.app/">
+    <meta property="og:title" content="Jam Session - Multiplayer Music Party Game">
+    <meta property="og:description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
+    <!-- TODO: Add og:image once social-share.png is created -->
+    <!-- <meta property="og:image" content="https://jam-mvp-xi.vercel.app/social-share.png"> -->
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://jam-mvp-xi.vercel.app/">
+    <meta property="twitter:title" content="Jam Session - Multiplayer Music Party Game">
+    <meta property="twitter:description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
+    <!-- TODO: Add twitter:image once social-share.png is created -->
+    <!-- <meta property="twitter:image" content="https://jam-mvp-xi.vercel.app/social-share.png"> -->
+
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        // Only initialize GA4 if measurement ID is set
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, {
+                'anonymize_ip': true,
+                'allow_google_signals': false,
+                'allow_ad_personalization_signals': false
+            });
+        }
+
+        // Analytics helper function
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.5);
+            font-size: 12px;
+        }
+        
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        
+        .live-dot.disconnected {
+            background: #ef4444;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .instrument-label {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .beat-dots {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .beat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.1s;
+        }
+        
+        .beat-dot.active {
+            background: #00d4ff;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px #00d4ff;
+        }
+        
+        .timer {
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        /* Main controller area */
+        .controller {
+            height: calc(100vh - 48px);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ============================================
+           DRUMS CONTROLLER
+           ============================================ */
+        
+        .drums-controller {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .drum-pad {
+            border-radius: 20px;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.05s, filter 0.05s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drum-pad:active {
+            transform: scale(0.95);
+            filter: brightness(1.3);
+        }
+        
+        .drum-pad .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+        
+        .drum-pad.kick {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+        
+        .drum-pad.snare {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        }
+        
+        .drum-pad.hat {
+            background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+        }
+        
+        .drum-pad.clap {
+            background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
+        }
+        
+        .drum-pad .ripple {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        
+        .drum-pad:active .ripple {
+            opacity: 1;
+        }
+        
+        /* ============================================
+           BASS CONTROLLER
+           ============================================ */
+        
+        .bass-controller {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .bass-keys {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .bass-key {
+            flex: 1;
+            min-height: 120px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(180deg, #6b21a8 0%, #581c87 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 24px 12px;
+            font-weight: bold;
+            font-size: 24px;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: transform 0.05s, filter 0.05s;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .bass-key:active,
+        .bass-key.held {
+            transform: scaleY(0.97);
+            filter: brightness(1.4);
+            background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+        }
+        
+        .bass-key .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            margin-bottom: 12px;
+            transition: all 0.1s;
+        }
+        
+        .bass-key:active .indicator {
+            background: white;
+            box-shadow: 0 0 15px white;
+            transform: scale(1.5);
+        }
+        
+        .bass-octave {
+            display: flex;
+            gap: 8px;
+            padding-top: 8px;
+        }
+        
+        .bass-octave button {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .bass-octave .current {
+            flex: 2;
+            background: rgba(147, 51, 234, 0.3);
+            font-size: 20px;
+        }
+        
+        /* ============================================
+           CHORDS CONTROLLER
+           ============================================ */
+        
+        .chords-controller {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .chord-pad {
+            border-radius: 20px;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.05s, filter 0.05s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chord-pad:active,
+        .chord-pad.held {
+            transform: scale(0.95);
+            filter: brightness(1.3);
+        }
+        
+        .chord-pad .name {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .chord-pad .notes {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+        }
+        
+        .chord-pad.am {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        }
+        
+        .chord-pad.f {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        
+        .chord-pad.c {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+        
+        .chord-pad.g {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .chord-pad.em {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .chord-pad.dm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .chord-pad .ripple {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        
+        .chord-pad:active .ripple,
+        .chord-pad.held .ripple {
+            opacity: 1;
+        }
+        
+        /* ============================================
+           CONNECTION / ERROR STATES
+           ============================================ */
+        
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .overlay.hidden {
+            display: none;
+        }
+        
+        .overlay h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .overlay p {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .overlay .emoji {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .overlay input {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .overlay input::placeholder {
+            letter-spacing: normal;
+            text-transform: none;
+        }
+        
+        .overlay button {
+            width: 100%;
+            max-width: 300px;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(135deg, #00d4ff, #764ba2);
+            color: white;
+            cursor: pointer;
+        }
+        
+        .overlay .error {
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+        
+        /* Waiting state */
+        .waiting-overlay .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Session ended */
+        .ended-overlay h1 {
+            font-size: 32px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Join overlay (shown if no room in URL) -->
+    <div class="overlay" id="joinOverlay">
+        <div class="emoji">🎵</div>
+        <h1>Join Jam Session</h1>
+        <p>Enter the room code shown on the TV</p>
+        <input type="text" id="roomInput" placeholder="CODE" maxlength="4" autocomplete="off">
+        <p class="error hidden" id="joinError"></p>
+        <button id="joinBtn">Join</button>
+    </div>
+    
+    <!-- Instrument selection overlay -->
+    <div class="overlay hidden" id="instrumentOverlay">
+        <div class="emoji">🎸</div>
+        <h1>Choose Your Instrument</h1>
+        <p>Pick what you want to play</p>
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px;">
+            <button class="instrument-btn" data-instrument="drums" style="background: linear-gradient(135deg, #dc2626, #991b1b);">🥁 Drums</button>
+            <button class="instrument-btn" data-instrument="bass" style="background: linear-gradient(135deg, #9333ea, #7c3aed);">🎸 Bass</button>
+            <button class="instrument-btn" data-instrument="chords" style="background: linear-gradient(135deg, #ec4899, #be185d);">🎹 Chords</button>
+        </div>
+    </div>
+    
+    <!-- Waiting for session overlay -->
+    <div class="overlay hidden waiting-overlay" id="waitingOverlay">
+        <div class="spinner"></div>
+        <h1>Connected!</h1>
+        <p>Waiting for host to start the session...</p>
+    </div>
+    
+    <!-- Session ended overlay -->
+    <div class="overlay hidden ended-overlay" id="endedOverlay">
+        <div class="emoji">🎉</div>
+        <h1>Session Complete!</h1>
+        <p>Great jam! Check the TV for stats.</p>
+
+        <!-- Survey Button -->
+        <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" id="playerSurveyLink" style="
+            display: block;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px auto;
+            max-width: 280px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        " ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+            📝 Share Feedback (3 min)
+        </a>
+
+        <button id="rejoinBtn">Play Again</button>
+    </div>
+    
+    <!-- Main controller UI -->
+    <div id="mainUI" class="hidden">
+        <div class="status-bar">
+            <div class="live-indicator">
+                <div class="live-dot" id="liveDot"></div>
+                <span id="connectionStatus">LIVE</span>
+            </div>
+            <div class="instrument-label">
+                <span id="instrumentEmoji">🥁</span>
+                <span id="instrumentName">Drums</span>
+            </div>
+            <div class="beat-dots">
+                <div class="beat-dot" data-beat="0"></div>
+                <div class="beat-dot" data-beat="1"></div>
+                <div class="beat-dot" data-beat="2"></div>
+                <div class="beat-dot" data-beat="3"></div>
+            </div>
+            <div class="timer" id="timer">3:00</div>
+        </div>
+        
+        <div class="controller" id="controllerContainer">
+            <!-- Instrument UI injected here -->
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        // IMPORTANT: Replace with your Ably API key (same as host.html)
+        const ABLY_API_KEY = '__ABLY_API_KEY__';
+        
+        // ============================================
+        // STATE
+        // ============================================
+        
+        let roomCode = '';
+        let instrument = '';
+        let playerName = '';
+        let channel = null;
+        let isConnected = false;
+        let sessionActive = false;
+
+        // Beat synchronization
+        let sessionStartTime = null;
+        let sessionBpm = 120;
+        let beatIntervalId = null;
+        
+        // ============================================
+        // URL PARAMS
+        // ============================================
+        
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                room: params.get('room'),
+                instrument: params.get('instrument'),
+                name: params.get('name')
+            };
+        }
+        
+        // ============================================
+        // INSTRUMENT UIs
+        // ============================================
+        
+        const instrumentConfigs = {
+            drums: {
+                emoji: '🥁',
+                name: 'Drums',
+                render: () => `
+                    <div class="drums-controller">
+                        <button class="drum-pad kick" data-note="kick">
+                            <div class="ripple"></div>
+                            <div class="icon">💥</div>
+                            KICK
+                        </button>
+                        <button class="drum-pad snare" data-note="snare">
+                            <div class="ripple"></div>
+                            <div class="icon">🔔</div>
+                            SNARE
+                        </button>
+                        <button class="drum-pad hat" data-note="hat">
+                            <div class="ripple"></div>
+                            <div class="icon">🎩</div>
+                            HI-HAT
+                        </button>
+                        <button class="drum-pad clap" data-note="clap">
+                            <div class="ripple"></div>
+                            <div class="icon">👏</div>
+                            CLAP
+                        </button>
+                    </div>
+                `,
+                setup: (sendFn) => {
+                    document.querySelectorAll('.drum-pad').forEach(pad => {
+                        let lastTapTime = 0;
+
+                        // Handle both touch and mouse
+                        const handler = (e) => {
+                            e.preventDefault();
+                            const note = pad.dataset.note;
+
+                            // Calculate velocity based on timing (faster taps = harder hits)
+                            const now = Date.now();
+                            const timeSinceLastTap = now - lastTapTime;
+                            let velocity = 0.7; // Default medium velocity
+
+                            if (timeSinceLastTap < 200) {
+                                // Rapid tap = harder hit
+                                velocity = 0.9 + Math.random() * 0.1;
+                            } else if (timeSinceLastTap < 500) {
+                                // Normal tap
+                                velocity = 0.7 + Math.random() * 0.2;
+                            } else {
+                                // Slow tap = softer hit
+                                velocity = 0.5 + Math.random() * 0.2;
+                            }
+
+                            lastTapTime = now;
+
+                            sendFn({ type: 'drums', note, velocity });
+                            vibrate();
+
+                            // Visual feedback based on velocity
+                            const ripple = pad.querySelector('.ripple');
+                            ripple.style.opacity = velocity;
+                        };
+                        pad.addEventListener('touchstart', handler);
+                        pad.addEventListener('mousedown', handler);
+                    });
+                }
+            },
+            
+            bass: {
+                emoji: '🎸',
+                name: 'Bass',
+                render: () => `
+                    <div class="bass-controller">
+                        <div class="bass-keys">
+                            ${['C', 'D', 'E', 'F', 'G', 'A', 'B'].map(note => `
+                                <button class="bass-key" data-note="${note}">
+                                    <div class="indicator"></div>
+                                    ${note}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `,
+                setup: (sendFn) => {
+                    document.querySelectorAll('.bass-key').forEach(key => {
+                        const note = key.dataset.note;
+                        let isHolding = false;
+
+                        // Note on (start sustain)
+                        const startHandler = (e) => {
+                            e.preventDefault();
+                            if (isHolding) return;
+                            isHolding = true;
+                            sendFn({ type: 'bass', note, action: 'on' });
+                            vibrate();
+                            key.classList.add('held');
+                        };
+
+                        // Note off (end sustain)
+                        const endHandler = (e) => {
+                            e.preventDefault();
+                            if (!isHolding) return;
+                            isHolding = false;
+                            sendFn({ type: 'bass', note, action: 'off' });
+                            key.classList.remove('held');
+                        };
+
+                        // Touch events
+                        key.addEventListener('touchstart', startHandler);
+                        key.addEventListener('touchend', endHandler);
+                        key.addEventListener('touchcancel', endHandler);
+
+                        // Mouse events (for desktop testing)
+                        key.addEventListener('mousedown', startHandler);
+                        key.addEventListener('mouseup', endHandler);
+                        key.addEventListener('mouseleave', endHandler);
+                    });
+                }
+            },
+            
+            chords: {
+                emoji: '🎹',
+                name: 'Chords',
+                render: () => `
+                    <div class="chords-controller">
+                        <button class="chord-pad am" data-chord="Am">
+                            <div class="ripple"></div>
+                            <div class="name">Am</div>
+                            <div class="notes">A-C-E</div>
+                        </button>
+                        <button class="chord-pad f" data-chord="F">
+                            <div class="ripple"></div>
+                            <div class="name">F</div>
+                            <div class="notes">F-A-C</div>
+                        </button>
+                        <button class="chord-pad c" data-chord="C">
+                            <div class="ripple"></div>
+                            <div class="name">C</div>
+                            <div class="notes">C-E-G</div>
+                        </button>
+                        <button class="chord-pad g" data-chord="G">
+                            <div class="ripple"></div>
+                            <div class="name">G</div>
+                            <div class="notes">G-B-D</div>
+                        </button>
+                        <button class="chord-pad em" data-chord="Em">
+                            <div class="ripple"></div>
+                            <div class="name">Em</div>
+                            <div class="notes">E-G-B</div>
+                        </button>
+                        <button class="chord-pad dm" data-chord="Dm">
+                            <div class="ripple"></div>
+                            <div class="name">Dm</div>
+                            <div class="notes">D-F-A</div>
+                        </button>
+                    </div>
+                `,
+                setup: (sendFn) => {
+                    document.querySelectorAll('.chord-pad').forEach(pad => {
+                        const chord = pad.dataset.chord;
+                        let isHolding = false;
+
+                        // Chord on (start sustain)
+                        const startHandler = (e) => {
+                            e.preventDefault();
+                            if (isHolding) return;
+                            isHolding = true;
+                            sendFn({ type: 'chords', chord, action: 'on' });
+                            vibrate();
+                            pad.classList.add('held');
+                        };
+
+                        // Chord off (release sustain)
+                        const endHandler = (e) => {
+                            e.preventDefault();
+                            if (!isHolding) return;
+                            isHolding = false;
+                            sendFn({ type: 'chords', chord, action: 'off' });
+                            pad.classList.remove('held');
+                        };
+
+                        // Touch events
+                        pad.addEventListener('touchstart', startHandler);
+                        pad.addEventListener('touchend', endHandler);
+                        pad.addEventListener('touchcancel', endHandler);
+
+                        // Mouse events (for desktop testing)
+                        pad.addEventListener('mousedown', startHandler);
+                        pad.addEventListener('mouseup', endHandler);
+                        pad.addEventListener('mouseleave', endHandler);
+                    });
+                }
+            }
+        };
+        
+        // ============================================
+        // UTILITIES
+        // ============================================
+        
+        function vibrate() {
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+        
+        function showOverlay(id) {
+            document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+            const overlay = document.getElementById(id);
+            if (overlay) overlay.classList.remove('hidden');
+            document.getElementById('mainUI').classList.add('hidden');
+        }
+        
+        function showMainUI() {
+            document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+            document.getElementById('mainUI').classList.remove('hidden');
+        }
+        
+        function updateBeatIndicator(beat) {
+            document.querySelectorAll('.beat-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === beat);
+            });
+        }
+        
+        function updateTimer(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('timer').textContent =
+                `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // ============================================
+        // BEAT SYNCHRONIZATION
+        // ============================================
+
+        function calculateCurrentBeat() {
+            if (!sessionStartTime) return 0;
+
+            const elapsed = (Date.now() - sessionStartTime) / 1000; // seconds
+            const beatsPerSecond = sessionBpm / 60;
+            const totalBeats = Math.floor(elapsed * beatsPerSecond);
+            return totalBeats % 4;
+        }
+
+        function startBeatSync(startTime, bpm) {
+            // Stop any existing interval
+            if (beatIntervalId) {
+                clearInterval(beatIntervalId);
+            }
+
+            sessionStartTime = startTime;
+            sessionBpm = bpm;
+
+            // Update beat indicator immediately
+            updateBeatIndicator(calculateCurrentBeat());
+
+            // Calculate interval - check 4x per quarter note for accuracy
+            const quarterNoteMs = (60 / bpm) * 1000;
+            const checkInterval = quarterNoteMs / 4;
+
+            let lastBeat = calculateCurrentBeat();
+
+            beatIntervalId = setInterval(() => {
+                const currentBeat = calculateCurrentBeat();
+                // Only update UI when beat actually changes
+                if (currentBeat !== lastBeat) {
+                    updateBeatIndicator(currentBeat);
+                    lastBeat = currentBeat;
+                }
+            }, checkInterval);
+        }
+
+        function stopBeatSync() {
+            if (beatIntervalId) {
+                clearInterval(beatIntervalId);
+                beatIntervalId = null;
+            }
+            sessionStartTime = null;
+        }
+
+        // ============================================
+        // CONNECTION
+        // ============================================
+        
+        async function connectToRoom(code, inst, name = 'Player') {
+            roomCode = code.toUpperCase();
+            instrument = inst;
+            playerName = name;
+
+            // Track player load attempt
+            trackEvent('player_loaded', {
+                instrument: instrument,
+                room_code: roomCode
+            });
+
+            if (ABLY_API_KEY === 'YOUR_ABLY_API_KEY_HERE') {
+                alert('Please add your Ably API key in play.html!');
+                trackEvent('connection_error', {
+                    error_type: 'missing_api_key',
+                    screen: 'player',
+                    instrument: instrument
+                });
+                return false;
+            }
+
+            try {
+                const ably = new Ably.Realtime(ABLY_API_KEY);
+                channel = ably.channels.get(`jam-${roomCode}`);
+
+                // Wait for connection
+                await new Promise((resolve, reject) => {
+                    ably.connection.on('connected', resolve);
+                    ably.connection.on('failed', reject);
+                    setTimeout(() => reject(new Error('Connection timeout')), 10000);
+                });
+
+                isConnected = true;
+
+                // Track successful connection
+                trackEvent('player_connected', {
+                    instrument: instrument,
+                    room_code: roomCode
+                });
+                
+                // Send join message
+                channel.publish('player', {
+                    type: 'join',
+                    instrument: instrument,
+                    name: playerName
+                });
+                
+                // Listen for host messages
+                channel.subscribe('host', (message) => {
+                    const data = message.data;
+                    if (data.type === 'beat') {
+                        updateBeatIndicator(data.beat);
+                    }
+                });
+                
+                // Listen for session state
+                channel.subscribe('session', (message) => {
+                    const data = message.data;
+                    if (data.type === 'session') {
+                        if (data.status === 'playing') {
+                            sessionActive = true;
+                            showMainUI();
+                            if (data.timeRemaining !== undefined) {
+                                updateTimer(data.timeRemaining);
+                            }
+                            // Start local beat synchronization
+                            if (data.startTime && data.bpm) {
+                                startBeatSync(data.startTime, data.bpm);
+                            }
+                        } else if (data.status === 'ended') {
+                            sessionActive = false;
+                            stopBeatSync();
+                            showOverlay('endedOverlay');
+                        }
+                    }
+                });
+                
+                // Handle disconnect
+                ably.connection.on('disconnected', () => {
+                    isConnected = false;
+                    document.getElementById('liveDot').classList.add('disconnected');
+                    document.getElementById('connectionStatus').textContent = 'RECONNECTING...';
+                });
+                
+                ably.connection.on('connected', () => {
+                    isConnected = true;
+                    document.getElementById('liveDot').classList.remove('disconnected');
+                    document.getElementById('connectionStatus').textContent = 'LIVE';
+                });
+                
+                return true;
+                
+            } catch (err) {
+                console.error('Connection error:', err);
+                trackEvent('connection_error', {
+                    error_type: 'ably_connection_failed',
+                    error_message: err.message || 'Unknown error',
+                    screen: 'player',
+                    instrument: instrument,
+                    room_code: roomCode
+                });
+                return false;
+            }
+        }
+        
+        function sendMessage(data) {
+            if (channel && isConnected) {
+                channel.publish('player', data);
+            }
+        }
+        
+        // ============================================
+        // UI SETUP
+        // ============================================
+        
+        function setupInstrumentUI() {
+            const config = instrumentConfigs[instrument];
+            if (!config) {
+                alert('Invalid instrument: ' + instrument);
+                return;
+            }
+            
+            // Update header
+            document.getElementById('instrumentEmoji').textContent = config.emoji;
+            document.getElementById('instrumentName').textContent = config.name;
+            
+            // Render controller
+            document.getElementById('controllerContainer').innerHTML = config.render();
+            
+            // Set up event handlers
+            config.setup(sendMessage);
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        async function init() {
+            const params = getUrlParams();
+            
+            // If we have room and instrument in URL, connect directly
+            if (params.room && params.instrument) {
+                roomCode = params.room;
+                instrument = params.instrument;
+                playerName = params.name || 'Player';
+                
+                setupInstrumentUI();
+                showOverlay('waitingOverlay');
+                
+                const connected = await connectToRoom(roomCode, instrument, playerName);
+                if (!connected) {
+                    showOverlay('joinOverlay');
+                    document.getElementById('joinError').textContent = 'Failed to connect. Check the room code.';
+                    document.getElementById('joinError').classList.remove('hidden');
+                }
+                return;
+            }
+            
+            // If we have room but no instrument, show instrument selection
+            if (params.room) {
+                roomCode = params.room;
+                document.getElementById('roomInput').value = roomCode;
+                showOverlay('instrumentOverlay');
+                
+                document.querySelectorAll('.instrument-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        instrument = btn.dataset.instrument;
+                        setupInstrumentUI();
+                        showOverlay('waitingOverlay');
+                        
+                        const connected = await connectToRoom(roomCode, instrument);
+                        if (!connected) {
+                            showOverlay('joinOverlay');
+                        }
+                    });
+                });
+                return;
+            }
+            
+            // No params - show join screen
+            showOverlay('joinOverlay');
+            
+            // Focus input
+            document.getElementById('roomInput').focus();
+            
+            // Join button handler
+            document.getElementById('joinBtn').addEventListener('click', () => {
+                const code = document.getElementById('roomInput').value.trim().toUpperCase();
+                if (code.length !== 4) {
+                    document.getElementById('joinError').textContent = 'Please enter a 4-letter code';
+                    document.getElementById('joinError').classList.remove('hidden');
+                    return;
+                }
+                
+                roomCode = code;
+                showOverlay('instrumentOverlay');
+            });
+            
+            // Enter key on input
+            document.getElementById('roomInput').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('joinBtn').click();
+                }
+            });
+            
+            // Instrument selection buttons
+            document.querySelectorAll('.instrument-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    instrument = btn.dataset.instrument;
+                    setupInstrumentUI();
+                    showOverlay('waitingOverlay');
+                    
+                    const connected = await connectToRoom(roomCode, instrument);
+                    if (!connected) {
+                        showOverlay('joinOverlay');
+                        document.getElementById('joinError').textContent = 'Failed to connect';
+                        document.getElementById('joinError').classList.remove('hidden');
+                    }
+                });
+            });
+            
+            // Rejoin button (Play Again)
+            document.getElementById('rejoinBtn').addEventListener('click', () => {
+                // Reset state and show waiting overlay
+                sessionActive = false;
+                stopBeatSync();
+                showOverlay('waitingOverlay');
+
+                // Player will automatically transition to mainUI when host
+                // broadcasts the new session start message
+            });
+
+            // Survey link tracking
+            document.getElementById('playerSurveyLink').addEventListener('click', () => {
+                trackEvent('survey_clicked', {
+                    source: 'player_end_screen',
+                    instrument: instrument,
+                    room_code: roomCode
+                });
+            });
+        }
+        
+        // Prevent zoom on double tap
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>

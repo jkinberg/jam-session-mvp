@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bass - Jam Session</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, { 'anonymize_ip': true });
+        }
+
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #111827;
+            color: white;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 16px;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .instrument-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instrument-title .emoji {
+            font-size: 28px;
+        }
+
+        .instrument-title .name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .room-info {
+            color: #6b7280;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        /* Section labels */
+        .section-label {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* Piano Roll Grid */
+        .piano-roll {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .piano-row {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            flex: 1;
+            min-height: 48px;
+        }
+
+        .note-label {
+            width: 32px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .note-cells {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .note-cell {
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.1s ease, box-shadow 0.1s ease;
+            background: #1f2937;
+            touch-action: none;  /* We handle touch ourselves for swipe */
+        }
+
+        .note-cell.swiping {
+            opacity: 0.7;
+        }
+
+        /* Beat markers - slightly lighter background every 4 steps */
+        .note-cell.beat-start {
+            border-left: 2px solid #374151;
+        }
+
+        /* Filled notes with colors per pitch */
+        .note-cell.filled {
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Sustain styling - connected notes */
+        .note-cell.sustain-start {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            margin-right: -2px;
+        }
+
+        .note-cell.sustain-middle {
+            border-radius: 0;
+            margin-left: -2px;
+            margin-right: -2px;
+        }
+
+        .note-cell.sustain-end {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            margin-left: -2px;
+        }
+
+        .piano-row[data-note="A"] .note-cell.filled { background: #ef4444; }
+        .piano-row[data-note="G"] .note-cell.filled { background: #f97316; }
+        .piano-row[data-note="F"] .note-cell.filled { background: #eab308; }
+        .piano-row[data-note="E"] .note-cell.filled { background: #22c55e; }
+        .piano-row[data-note="D"] .note-cell.filled { background: #3b82f6; }
+        .piano-row[data-note="C"] .note-cell.filled { background: #8b5cf6; }
+
+        /* Note labels get color when row has notes */
+        .piano-row[data-note="A"] .note-label.active { color: #ef4444; }
+        .piano-row[data-note="G"] .note-label.active { color: #f97316; }
+        .piano-row[data-note="F"] .note-label.active { color: #eab308; }
+        .piano-row[data-note="E"] .note-label.active { color: #22c55e; }
+        .piano-row[data-note="D"] .note-label.active { color: #3b82f6; }
+        .piano-row[data-note="C"] .note-label.active { color: #8b5cf6; }
+
+        /* Action buttons row */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .clear-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #1f2937;
+            color: #9ca3af;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .clear-btn:active {
+            transform: scale(0.98);
+        }
+
+        .send-btn {
+            flex: 2;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #374151;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .send-btn.has-changes {
+            background: #8b5cf6;
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .send-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* In Mix Display */
+        .in-mix {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .in-mix-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .in-mix-grid {
+            display: flex;
+            gap: 2px;
+            height: 24px;
+        }
+
+        .in-mix-step {
+            flex: 1;
+            background: #374151;
+            border-radius: 3px;
+        }
+
+        .in-mix-step.filled {
+            background: #8b5cf6;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .draft-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .draft-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #374151;
+        }
+
+        .draft-indicator .dot.changed {
+            background: #f59e0b;
+        }
+
+        .mode-indicator {
+            color: #f59e0b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Error message */
+        .error {
+            background: #7f1d1d;
+            color: #fecaca;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* Name input modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #1f2937;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .modal h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .modal p {
+            color: #9ca3af;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #374151;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .modal button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #8b5cf6;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Waiting overlay */
+        .waiting-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .waiting-overlay .emoji {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .waiting-overlay h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .waiting-overlay p {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .waiting-overlay .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Session ended overlay */
+        .ended-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .ended-overlay h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .ended-overlay p {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .ended-overlay .survey-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.1);
+            color: #00d4ff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .ended-overlay .survey-link:hover {
+            background: rgba(255,255,255,0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- Waiting overlay -->
+    <div class="waiting-overlay hidden" id="waitingOverlay">
+        <div class="emoji">🎸</div>
+        <h2>You're in!</h2>
+        <p class="pulse">Waiting for host to start the jam...</p>
+    </div>
+
+    <!-- Session ended overlay -->
+    <div class="ended-overlay hidden" id="endedOverlay">
+        <div class="emoji" style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+        <h2>Session Complete!</h2>
+        <p>Thanks for jamming!</p>
+        <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link" onclick="trackEvent('survey_clicked', { source: 'player_end_screen', instrument: 'bass', room_code: state.roomCode })">Share your feedback</a>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <h2>🎸 Bass</h2>
+            <p>Enter your name to join the jam</p>
+            <input type="text" id="nameInput" placeholder="Your name" maxlength="20" autocomplete="off">
+            <button id="joinBtn" disabled>Join Session</button>
+        </div>
+    </div>
+
+    <!-- Main UI -->
+    <div class="container hidden" id="mainUI">
+        <!-- Header -->
+        <div class="header">
+            <div class="instrument-title">
+                <span class="emoji">🎸</span>
+                <span class="name">BASS</span>
+            </div>
+            <div class="room-info">Room: <span id="roomCode">----</span></div>
+        </div>
+
+        <!-- Error message -->
+        <div class="error hidden" id="errorMsg"></div>
+
+        <!-- Piano Roll -->
+        <div class="section-label">Tap or swipe to draw notes:</div>
+        <div class="piano-roll" id="pianoRoll">
+            <!-- Generated by JS -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="clear-btn" id="clearBtn">CLEAR</button>
+            <button class="send-btn" id="sendBtn">SEND TO MIX</button>
+        </div>
+
+        <!-- In Mix Display -->
+        <div class="in-mix">
+            <div class="in-mix-label">IN MIX:</div>
+            <div class="in-mix-grid" id="inMixGrid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="draft-indicator">
+                <div class="dot" id="changedDot"></div>
+                <span id="draftStatus">No changes</span>
+            </div>
+            <div class="mode-indicator">Draft Mode</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        const STEPS = 16;
+        const NOTES = ['A', 'G', 'F', 'E', 'D', 'C'];  // Top to bottom (high to low)
+        const NOTE_COLORS = {
+            'A': '#ef4444',
+            'G': '#f97316',
+            'F': '#eab308',
+            'E': '#22c55e',
+            'D': '#3b82f6',
+            'C': '#8b5cf6'
+        };
+
+        // ===== STATE =====
+        const state = {
+            roomCode: '',
+            playerName: '',
+            draft: [],      // Array of { step, note, duration }
+            sent: []        // What's currently in the mix
+        };
+
+        // Swipe state
+        let isDrawing = false;
+        let drawNote = null;
+        let drawStartStep = null;
+        let drawCurrentStep = null;
+
+        // ===== ABLY =====
+        const ABLY_API_KEY = '__ABLY_API_KEY__';
+        let ably = null;
+        let playerChannel = null;
+        let sessionChannel = null;
+        let sessionStarted = false;
+
+        // ===== INITIALIZATION =====
+        function init() {
+            const params = new URLSearchParams(window.location.search);
+            state.roomCode = params.get('room') || '';
+
+            if (!state.roomCode) {
+                showError('No room code provided. Scan a QR code from the host screen.');
+                return;
+            }
+
+            document.getElementById('roomCode').textContent = state.roomCode;
+            setupNameInput();
+
+            trackEvent('player_loaded', {
+                instrument: 'bass',
+                room_code: state.roomCode
+            });
+        }
+
+        function setupNameInput() {
+            const nameInput = document.getElementById('nameInput');
+            const joinBtn = document.getElementById('joinBtn');
+
+            nameInput.addEventListener('input', () => {
+                joinBtn.disabled = nameInput.value.trim().length === 0;
+            });
+
+            joinBtn.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    state.playerName = name;
+                    document.getElementById('nameModal').classList.add('hidden');
+                    document.getElementById('waitingOverlay').classList.remove('hidden');
+                    connectToRoom();
+                }
+            });
+
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && nameInput.value.trim()) {
+                    joinBtn.click();
+                }
+            });
+
+            setTimeout(() => nameInput.focus(), 100);
+        }
+
+        function connectToRoom() {
+            if (ABLY_API_KEY.startsWith('__')) {
+                showError('Ably not configured');
+                return;
+            }
+
+            ably = new Ably.Realtime({ key: ABLY_API_KEY });
+
+            ably.connection.on('connected', () => {
+                console.log('Connected to Ably');
+                playerChannel = ably.channels.get(`room-${state.roomCode}-player`);
+                sessionChannel = ably.channels.get(`room-${state.roomCode}-session`);
+
+                // Subscribe to session events FIRST
+                sessionChannel.subscribe('session', (message) => {
+                    handleSessionMessage(message.data);
+                });
+
+                // Wait for session channel to attach, then send join message
+                sessionChannel.once('attached', () => {
+                    playerChannel.publish('message', {
+                        type: 'player_joined',
+                        instrument: 'bass',
+                        player: state.playerName
+                    });
+                });
+
+                trackEvent('player_connected', {
+                    instrument: 'bass',
+                    room_code: state.roomCode
+                });
+            });
+
+            ably.connection.on('failed', (err) => {
+                console.error('Ably connection failed:', err);
+                showError('Connection failed. Please refresh and try again.');
+                trackEvent('connection_error', { error: 'ably_failed' });
+            });
+
+            setupUI();
+        }
+
+        function handleSessionMessage(data) {
+            console.log('Session message:', data);
+
+            if (data.type === 'session_start') {
+                sessionStarted = true;
+                document.getElementById('waitingOverlay').classList.add('hidden');
+                document.getElementById('mainUI').classList.remove('hidden');
+            } else if (data.type === 'session_end') {
+                document.getElementById('mainUI').classList.add('hidden');
+                document.getElementById('endedOverlay').classList.remove('hidden');
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        // ===== UI SETUP =====
+        function setupUI() {
+            buildPianoRoll();
+            buildInMixGrid();
+
+            document.getElementById('sendBtn').addEventListener('click', sendToMix);
+            document.getElementById('clearBtn').addEventListener('click', clearDraft);
+
+            renderDraft();
+            renderInMix();
+            updateChangeStatus();
+        }
+
+        function buildPianoRoll() {
+            const container = document.getElementById('pianoRoll');
+            container.innerHTML = '';
+
+            NOTES.forEach(note => {
+                const row = document.createElement('div');
+                row.className = 'piano-row';
+                row.dataset.note = note;
+
+                const label = document.createElement('div');
+                label.className = 'note-label';
+                label.textContent = note;
+                row.appendChild(label);
+
+                const cells = document.createElement('div');
+                cells.className = 'note-cells';
+
+                for (let step = 0; step < STEPS; step++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'note-cell' + (step % 4 === 0 && step > 0 ? ' beat-start' : '');
+                    cell.dataset.step = step;
+                    cell.dataset.note = note;
+                    cells.appendChild(cell);
+                }
+
+                row.appendChild(cells);
+                container.appendChild(row);
+            });
+
+            // Add touch/mouse handlers for swipe drawing
+            setupDrawHandlers(container);
+        }
+
+        function setupDrawHandlers(container) {
+            // Get cell from touch/mouse position
+            function getCellFromPoint(x, y) {
+                const el = document.elementFromPoint(x, y);
+                if (el && el.classList.contains('note-cell')) {
+                    return {
+                        note: el.dataset.note,
+                        step: parseInt(el.dataset.step)
+                    };
+                }
+                return null;
+            }
+
+            // Start drawing
+            function handleStart(x, y) {
+                const cell = getCellFromPoint(x, y);
+                if (!cell) return;
+
+                isDrawing = true;
+                drawNote = cell.note;
+                drawStartStep = cell.step;
+                drawCurrentStep = cell.step;
+
+                // Show preview
+                renderSwipePreview();
+            }
+
+            // Continue drawing (swipe)
+            function handleMove(x, y) {
+                if (!isDrawing) return;
+
+                const cell = getCellFromPoint(x, y);
+                if (!cell) return;
+
+                // Only allow horizontal movement on the same note row
+                if (cell.note === drawNote && cell.step !== drawCurrentStep) {
+                    drawCurrentStep = cell.step;
+                    renderSwipePreview();
+                }
+            }
+
+            // End drawing
+            function handleEnd() {
+                if (!isDrawing) return;
+
+                // Finalize the note
+                const startStep = Math.min(drawStartStep, drawCurrentStep);
+                const endStep = Math.max(drawStartStep, drawCurrentStep);
+                const duration = endStep - startStep + 1;
+
+                // Remove any overlapping notes
+                state.draft = state.draft.filter(n => {
+                    // Remove if this note overlaps with our new note's range
+                    const noteEnd = n.step + n.duration - 1;
+                    const overlap = !(noteEnd < startStep || n.step > endStep);
+                    return !overlap;
+                });
+
+                // Check if tapping an existing single note to remove it
+                const existingNote = state.draft.find(n =>
+                    n.note === drawNote &&
+                    n.step === startStep &&
+                    n.duration === 1 &&
+                    duration === 1
+                );
+
+                if (existingNote) {
+                    // Remove it (toggle off)
+                    state.draft = state.draft.filter(n => n !== existingNote);
+                } else {
+                    // Add the new note
+                    state.draft.push({
+                        step: startStep,
+                        note: drawNote,
+                        duration: duration
+                    });
+                }
+
+                // Reset drawing state
+                isDrawing = false;
+                drawNote = null;
+                drawStartStep = null;
+                drawCurrentStep = null;
+
+                // Clear preview and render final
+                clearSwipePreview();
+                renderDraft();
+                updateChangeStatus();
+            }
+
+            // Touch events
+            container.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                handleStart(touch.clientX, touch.clientY);
+                e.preventDefault();
+            }, { passive: false });
+
+            container.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+                e.preventDefault();
+            }, { passive: false });
+
+            container.addEventListener('touchend', (e) => {
+                handleEnd();
+                e.preventDefault();
+            }, { passive: false });
+
+            container.addEventListener('touchcancel', () => {
+                isDrawing = false;
+                clearSwipePreview();
+            });
+
+            // Mouse events (for desktop testing)
+            container.addEventListener('mousedown', (e) => {
+                handleStart(e.clientX, e.clientY);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDrawing) {
+                    handleMove(e.clientX, e.clientY);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDrawing) {
+                    handleEnd();
+                }
+            });
+        }
+
+        function renderSwipePreview() {
+            clearSwipePreview();
+
+            if (!isDrawing || drawNote === null) return;
+
+            const startStep = Math.min(drawStartStep, drawCurrentStep);
+            const endStep = Math.max(drawStartStep, drawCurrentStep);
+
+            for (let s = startStep; s <= endStep; s++) {
+                const cell = document.querySelector(`.note-cell[data-note="${drawNote}"][data-step="${s}"]`);
+                if (cell) {
+                    cell.classList.add('filled', 'swiping');
+                }
+            }
+        }
+
+        function clearSwipePreview() {
+            document.querySelectorAll('.note-cell.swiping').forEach(cell => {
+                cell.classList.remove('swiping');
+                // Will be properly set by renderDraft
+            });
+        }
+
+        function buildInMixGrid() {
+            const container = document.getElementById('inMixGrid');
+            container.innerHTML = '';
+
+            for (let step = 0; step < STEPS; step++) {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'in-mix-step';
+                stepEl.dataset.step = step;
+                container.appendChild(stepEl);
+            }
+        }
+
+        // ===== NOTE LOGIC =====
+        function clearDraft() {
+            state.draft = [];
+            renderDraft();
+            updateChangeStatus();
+        }
+
+        function sendToMix() {
+            if (!playerChannel) return;
+
+            // Sort by step for cleaner data
+            const pattern = [...state.draft].sort((a, b) => a.step - b.step);
+
+            playerChannel.publish('message', {
+                type: 'pattern_update',
+                instrument: 'bass',
+                player: state.playerName,
+                pattern: pattern
+            });
+
+            state.sent = [...state.draft];
+            renderInMix();
+            updateChangeStatus();
+
+            trackEvent('pattern_sent', {
+                instrument: 'bass',
+                room_code: state.roomCode,
+                note_count: pattern.length
+            });
+        }
+
+        // ===== RENDERING =====
+        function renderDraft() {
+            // Clear all cells
+            document.querySelectorAll('.note-cell').forEach(cell => {
+                cell.classList.remove('filled', 'sustain-start', 'sustain-middle', 'sustain-end');
+            });
+
+            // Clear all label highlights
+            document.querySelectorAll('.note-label').forEach(label => {
+                label.classList.remove('active');
+            });
+
+            // Fill active notes with sustain styling
+            const activeNotes = new Set();
+            state.draft.forEach(({ note, step, duration }) => {
+                activeNotes.add(note);
+
+                for (let i = 0; i < duration; i++) {
+                    const cellStep = step + i;
+                    if (cellStep >= STEPS) break;
+
+                    const cell = document.querySelector(`.note-cell[data-note="${note}"][data-step="${cellStep}"]`);
+                    if (cell) {
+                        cell.classList.add('filled');
+
+                        // Add sustain styling for multi-step notes
+                        if (duration > 1) {
+                            if (i === 0) {
+                                cell.classList.add('sustain-start');
+                            } else if (i === duration - 1) {
+                                cell.classList.add('sustain-end');
+                            } else {
+                                cell.classList.add('sustain-middle');
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Highlight labels for rows with notes
+            activeNotes.forEach(note => {
+                const row = document.querySelector(`.piano-row[data-note="${note}"]`);
+                if (row) {
+                    row.querySelector('.note-label').classList.add('active');
+                }
+            });
+        }
+
+        function renderInMix() {
+            document.querySelectorAll('.in-mix-step').forEach(stepEl => {
+                const step = parseInt(stepEl.dataset.step);
+                // Check if any note covers this step (including sustained notes)
+                const hasNote = state.sent.some(n => {
+                    const noteEnd = n.step + (n.duration || 1) - 1;
+                    return step >= n.step && step <= noteEnd;
+                });
+                stepEl.classList.toggle('filled', hasNote);
+            });
+        }
+
+        function updateChangeStatus() {
+            const draftSteps = state.draft.map(n => `${n.note}:${n.step}:${n.duration}`).sort().join(',');
+            const sentSteps = state.sent.map(n => `${n.note}:${n.step}:${n.duration}`).sort().join(',');
+            const hasChanges = draftSteps !== sentSteps;
+
+            const sendBtn = document.getElementById('sendBtn');
+            const changedDot = document.getElementById('changedDot');
+            const draftStatus = document.getElementById('draftStatus');
+
+            sendBtn.classList.toggle('has-changes', hasChanges);
+            changedDot.classList.toggle('changed', hasChanges);
+            draftStatus.textContent = hasChanges ? 'Unsent changes' : 'No changes';
+        }
+
+        // ===== START =====
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Percussion - Jam Session</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, { 'anonymize_ip': true });
+        }
+
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #111827;
+            color: white;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 20px;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .instrument-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instrument-title .emoji {
+            font-size: 28px;
+        }
+
+        .instrument-title .name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .room-info {
+            color: #6b7280;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        /* Sound Selector - 3x2 grid for 6 sounds */
+        .section-label {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .sound-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .sound-btn {
+            padding: 12px 8px;
+            border: none;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: #1f2937;
+            color: #6b7280;
+            touch-action: manipulation;
+        }
+
+        .sound-btn.selected {
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .sound-btn[data-sound="cowbell"] { --sound-color: #f59e0b; }
+        .sound-btn[data-sound="clave"] { --sound-color: #d97706; }
+        .sound-btn[data-sound="triangle"] { --sound-color: #fbbf24; }
+        .sound-btn[data-sound="tambourine"] { --sound-color: #b45309; }
+        .sound-btn[data-sound="congaHi"] { --sound-color: #92400e; }
+        .sound-btn[data-sound="congaLo"] { --sound-color: #78350f; }
+
+        .sound-btn.selected {
+            background: var(--sound-color);
+            box-shadow: 0 4px 20px color-mix(in srgb, var(--sound-color) 40%, transparent);
+        }
+
+        /* Step Grid */
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            background: #1f2937;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .step.filled {
+            color: white;
+        }
+
+        .step.filled[data-filled-sound="cowbell"] { background: #f59e0b; }
+        .step.filled[data-filled-sound="clave"] { background: #d97706; }
+        .step.filled[data-filled-sound="triangle"] { background: #fbbf24; }
+        .step.filled[data-filled-sound="tambourine"] { background: #b45309; }
+        .step.filled[data-filled-sound="congaHi"] { background: #92400e; }
+        .step.filled[data-filled-sound="congaLo"] { background: #78350f; }
+
+        .step:active {
+            transform: scale(0.95);
+        }
+
+        /* Clear Button */
+        .clear-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #1f2937;
+            color: #9ca3af;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .clear-btn:hover {
+            background: #374151;
+        }
+
+        .clear-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .beat-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .beat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #374151;
+        }
+
+        .live-indicator {
+            color: #22c55e;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Connection status */
+        .connecting {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .connecting .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #374151;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #7f1d1d;
+            color: #fecaca;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Name input modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #1f2937;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .modal h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .modal p {
+            color: #9ca3af;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #374151;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
+
+        .modal button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #f59e0b;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Waiting overlay */
+        .waiting-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .waiting-overlay .emoji {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .waiting-overlay h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .waiting-overlay p {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .waiting-overlay .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Session ended overlay */
+        .ended-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .ended-overlay h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .ended-overlay p {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .ended-overlay .survey-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.1);
+            color: #00d4ff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .ended-overlay .survey-link:hover {
+            background: rgba(255,255,255,0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- Waiting overlay -->
+    <div class="waiting-overlay hidden" id="waitingOverlay">
+        <div class="emoji">🎵</div>
+        <h2>You're in!</h2>
+        <p class="pulse">Waiting for host to start the jam...</p>
+    </div>
+
+    <!-- Session ended overlay -->
+    <div class="ended-overlay hidden" id="endedOverlay">
+        <div class="emoji" style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+        <h2>Session Complete!</h2>
+        <p>Thanks for jamming!</p>
+        <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link" onclick="trackEvent('survey_clicked', { source: 'player_end_screen', instrument: 'percussion', room_code: state.roomCode })">Share your feedback</a>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <h2>🎵 Percussion</h2>
+            <p>Enter your name to join the jam</p>
+            <input type="text" id="nameInput" placeholder="Your name" maxlength="20" autocomplete="off">
+            <button id="joinBtn" disabled>Join Session</button>
+        </div>
+    </div>
+
+    <!-- Main UI -->
+    <div class="container hidden" id="mainUI">
+        <!-- Header -->
+        <div class="header">
+            <div class="instrument-title">
+                <span class="emoji">🎵</span>
+                <span class="name">PERCUSSION</span>
+            </div>
+            <div class="room-info">Room: <span id="roomCode">----</span></div>
+        </div>
+
+        <!-- Error message -->
+        <div class="error hidden" id="errorMsg"></div>
+
+        <!-- Sound Selector -->
+        <div class="section-label">Select sound:</div>
+        <div class="sound-selector" id="soundSelector">
+            <button class="sound-btn selected" data-sound="cowbell">COWBELL</button>
+            <button class="sound-btn" data-sound="clave">CLAVE</button>
+            <button class="sound-btn" data-sound="triangle">TRIANGLE</button>
+            <button class="sound-btn" data-sound="tambourine">TAMBOUR</button>
+            <button class="sound-btn" data-sound="congaHi">CONGA HI</button>
+            <button class="sound-btn" data-sound="congaLo">CONGA LO</button>
+        </div>
+
+        <!-- Step Grid -->
+        <div class="section-label">Tap to place sounds:</div>
+        <div class="step-grid" id="stepGrid"></div>
+
+        <!-- Clear Button -->
+        <button class="clear-btn" id="clearBtn">CLEAR ALL</button>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="beat-dots">
+                <div class="beat-dot"></div>
+                <div class="beat-dot"></div>
+                <div class="beat-dot"></div>
+                <div class="beat-dot"></div>
+            </div>
+            <div class="live-indicator">● Live</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        const STEPS = 16;
+        const SOUNDS = {
+            cowbell: { label: 'COWBELL', short: 'Cw', color: '#f59e0b' },
+            clave: { label: 'CLAVE', short: 'Cl', color: '#d97706' },
+            triangle: { label: 'TRIANGLE', short: 'Tr', color: '#fbbf24' },
+            tambourine: { label: 'TAMBOUR', short: 'Tb', color: '#b45309' },
+            congaHi: { label: 'CONGA HI', short: 'CH', color: '#92400e' },
+            congaLo: { label: 'CONGA LO', short: 'CL', color: '#78350f' }
+        };
+
+        // ===== STATE =====
+        const state = {
+            roomCode: '',
+            playerName: '',
+            selectedSound: 'cowbell',
+            pattern: []  // Array of { step, sound }
+        };
+
+        // ===== ABLY =====
+        const ABLY_API_KEY = '__ABLY_API_KEY__';
+        let ably = null;
+        let playerChannel = null;
+        let sessionChannel = null;
+        let sessionStarted = false;
+
+        // ===== INITIALIZATION =====
+        function init() {
+            // Get room code from URL
+            const params = new URLSearchParams(window.location.search);
+            state.roomCode = params.get('room') || '';
+
+            if (!state.roomCode) {
+                showError('No room code provided. Scan a QR code from the host screen.');
+                return;
+            }
+
+            document.getElementById('roomCode').textContent = state.roomCode;
+
+            // Setup name input
+            setupNameInput();
+
+            trackEvent('player_loaded', {
+                instrument: 'percussion',
+                room_code: state.roomCode
+            });
+        }
+
+        function setupNameInput() {
+            const nameInput = document.getElementById('nameInput');
+            const joinBtn = document.getElementById('joinBtn');
+
+            nameInput.addEventListener('input', () => {
+                joinBtn.disabled = nameInput.value.trim().length === 0;
+            });
+
+            joinBtn.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    state.playerName = name;
+                    document.getElementById('nameModal').classList.add('hidden');
+                    document.getElementById('waitingOverlay').classList.remove('hidden');
+                    connectToRoom();
+                }
+            });
+
+            // Allow Enter key
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && nameInput.value.trim()) {
+                    joinBtn.click();
+                }
+            });
+
+            // Focus input
+            setTimeout(() => nameInput.focus(), 100);
+        }
+
+        function connectToRoom() {
+            if (ABLY_API_KEY.startsWith('__')) {
+                showError('Ably not configured');
+                return;
+            }
+
+            ably = new Ably.Realtime({ key: ABLY_API_KEY });
+
+            ably.connection.on('connected', () => {
+                console.log('Connected to Ably');
+                playerChannel = ably.channels.get(`room-${state.roomCode}-player`);
+                sessionChannel = ably.channels.get(`room-${state.roomCode}-session`);
+
+                // Subscribe to session events FIRST
+                sessionChannel.subscribe('session', (message) => {
+                    handleSessionMessage(message.data);
+                });
+
+                // Wait for session channel to attach, then send join message
+                sessionChannel.once('attached', () => {
+                    playerChannel.publish('message', {
+                        type: 'player_joined',
+                        instrument: 'percussion',
+                        player: state.playerName
+                    });
+                });
+
+                trackEvent('player_connected', {
+                    instrument: 'percussion',
+                    room_code: state.roomCode
+                });
+            });
+
+            ably.connection.on('failed', (err) => {
+                console.error('Ably connection failed:', err);
+                showError('Connection failed. Please refresh and try again.');
+                trackEvent('connection_error', { error: 'ably_failed' });
+            });
+
+            // Setup UI
+            setupStepGrid();
+            setupSoundSelector();
+            setupClearButton();
+        }
+
+        function handleSessionMessage(data) {
+            console.log('Session message:', data);
+
+            if (data.type === 'session_start') {
+                sessionStarted = true;
+                document.getElementById('waitingOverlay').classList.add('hidden');
+                document.getElementById('mainUI').classList.remove('hidden');
+            } else if (data.type === 'session_end') {
+                document.getElementById('mainUI').classList.add('hidden');
+                document.getElementById('endedOverlay').classList.remove('hidden');
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        // ===== UI SETUP =====
+        function setupStepGrid() {
+            const grid = document.getElementById('stepGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < STEPS; i++) {
+                const step = document.createElement('button');
+                step.className = 'step';
+                step.dataset.step = i;
+                step.textContent = i + 1;
+                step.addEventListener('click', () => toggleStep(i));
+                grid.appendChild(step);
+            }
+        }
+
+        function setupSoundSelector() {
+            const selector = document.getElementById('soundSelector');
+            selector.addEventListener('click', (e) => {
+                const btn = e.target.closest('.sound-btn');
+                if (!btn) return;
+
+                // Update selection
+                selector.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                state.selectedSound = btn.dataset.sound;
+            });
+        }
+
+        function setupClearButton() {
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                state.pattern = [];
+                renderPattern();
+                sendPatternUpdate();
+            });
+        }
+
+        // ===== PATTERN LOGIC =====
+        function toggleStep(stepIndex) {
+            const existing = state.pattern.find(p => p.step === stepIndex);
+
+            if (existing) {
+                if (existing.sound === state.selectedSound) {
+                    // Same sound - remove it
+                    state.pattern = state.pattern.filter(p => p.step !== stepIndex);
+                } else {
+                    // Different sound - replace it
+                    existing.sound = state.selectedSound;
+                }
+            } else {
+                // Empty step - add sound
+                state.pattern.push({ step: stepIndex, sound: state.selectedSound });
+            }
+
+            renderPattern();
+            sendPatternUpdate();
+        }
+
+        function renderPattern() {
+            const steps = document.querySelectorAll('.step');
+
+            steps.forEach((stepEl, i) => {
+                const hit = state.pattern.find(p => p.step === i);
+
+                if (hit) {
+                    stepEl.classList.add('filled');
+                    stepEl.dataset.filledSound = hit.sound;
+                    stepEl.textContent = SOUNDS[hit.sound].short;
+                } else {
+                    stepEl.classList.remove('filled');
+                    delete stepEl.dataset.filledSound;
+                    stepEl.textContent = i + 1;
+                }
+            });
+        }
+
+        function sendPatternUpdate() {
+            if (!playerChannel) return;
+
+            playerChannel.publish('message', {
+                type: 'pattern_update',
+                instrument: 'percussion',
+                player: state.playerName,
+                pattern: state.pattern
+            });
+        }
+
+        // ===== START =====
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

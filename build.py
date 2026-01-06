@@ -106,16 +106,29 @@ def main():
 
     # Build HTML files
     print("🔨 Building HTML files from templates...")
-    build_html_file('host.template.html', 'host.html', env_vars)
-    build_html_file('play.template.html', 'play.html', env_vars)
 
-    # Also generate index.html from host template (for root URL access)
-    build_html_file('host.template.html', 'index.html', env_vars)
+    # V1 Sequencer templates
+    templates = [
+        ('index.template.html', 'index.html'),  # Landing page
+        ('host.template.html', 'host.html'),
+        ('drums.template.html', 'drums.html'),
+        ('percussion.template.html', 'percussion.html'),
+        ('bass.template.html', 'bass.html'),
+        ('chords.template.html', 'chords.html'),
+    ]
+
+    for template, output in templates:
+        template_path = Path(template)
+        if template_path.exists():
+            build_html_file(template, output, env_vars)
+        else:
+            print(f"⏭ Skipping {template} (not yet created)")
 
     print("\n✨ Build complete!")
     print("\nYou can now run the server:")
     print("  python3 -m http.server 8000")
     print("  - Host screen: http://localhost:8000/ or http://localhost:8000/host.html")
+    print("  - Instruments: http://localhost:8000/drums.html?room=XXXX")
 
 
 if __name__ == '__main__':

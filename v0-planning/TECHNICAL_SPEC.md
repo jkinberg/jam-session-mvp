@@ -1,5 +1,8 @@
 # Jam Session MVP — Technical Specification
 
+> **⚠️ V0 Documentation:** This spec describes the V0 real-time trigger-based version.
+> For V1 (sequencer), see `v1-planning/V1_SEQUENCER_SPEC.md`.
+
 ## Overview
 
 Jam Session is a multiplayer music party game where players use their phones as virtual instruments while a shared screen (TV/laptop) displays a visualizer and plays all audio. The experience is designed to make non-musicians sound good together through automatic quantization and constrained musical scales.

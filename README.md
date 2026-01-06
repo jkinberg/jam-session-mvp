@@ -1,8 +1,8 @@
-# 🎵 Jam Session MVP
+# 🎵 Jam Session
 
-A minimal multiplayer music jam session where players use their phones as instruments and a shared screen displays the visualizer and plays the audio.
+A multiplayer music jam session where players use their phones to build looping patterns and a shared screen displays the visualizer and plays the audio.
 
-> **🤖 For AI Assistants (Claude Code, Cursor, etc.)**: See `CLAUDE.md` for project instructions, `TECHNICAL_SPEC.md` for detailed architecture, and `ROADMAP.md` for feature prioritization. This README is user-facing setup documentation.
+> **🤖 For AI Assistants (Claude Code, Cursor, etc.)**: See `CLAUDE.md` for project instructions, `TODO.md` for task tracking, and `ROADMAP.md` for feature prioritization.
 
 ---
 
@@ -11,10 +11,10 @@ A minimal multiplayer music jam session where players use their phones as instru
 | Component | Description |
 |-----------|-------------|
 | **Host device** | TV/laptop displays visualizer and plays ALL audio via Tone.js |
-| **Phone controllers** | Send note messages over WebSocket (no audio on phones) |
-| **Instruments** | Drums (4 pads), Bass (7 keys with sustain), Chords (6 pads with sustain) |
-| **Quantization** | Drums snap to 8th notes; Bass & Chords play immediately for expressive control |
-| **Musical constraints** | Bass = C minor pentatonic, Chords = Am-F-C-G-Em-Dm (all in C major/A minor) |
+| **Phone controllers** | Build 16-step looping patterns (no audio on phones) |
+| **Instruments** | Drums, Percussion, Bass, Chords (4 players max) |
+| **Sequencer** | 16-step loop at 120 BPM, patterns play in perfect sync |
+| **Lobby** | Players join and get ready before session starts |
 
 ---
 
@@ -22,24 +22,23 @@ A minimal multiplayer music jam session where players use their phones as instru
 
 ```
 jam-mvp/
-├── host.template.html      # Host screen template (with placeholders)
-├── play.template.html      # Phone controller template (with placeholders)
+├── index.template.html     # Landing page template
+├── host.template.html      # Host screen template
+├── drums.template.html     # Drums phone UI template
+├── percussion.template.html # Percussion phone UI template
+├── bass.template.html      # Bass phone UI template
+├── chords.template.html    # Chords phone UI template
 ├── build.py                # Build script (generates HTML from templates)
 ├── vercel.json             # Vercel deployment configuration
 ├── .env.example            # Example environment variables
-├── .env                    # Your environment variables (not committed to git)
-├── host.html               # Generated host screen (not committed to git)
-├── play.html               # Generated phone controller (not committed to git)
-├── index.html              # Generated index (same as host, not committed)
-├── README.md               # This file (user setup guide)
-├── TODO.md                 # Project TODO list and task tracking
-├── ROADMAP.md              # Product roadmap and feature prioritization
-├── CLAUDE.md               # Instructions for AI assistants
-├── TECHNICAL_SPEC.md       # Detailed technical documentation
-├── ANALYTICS_PLAN.md       # Google Analytics integration plan
-├── GROOVE_FEEDBACK_PLAN.md # Groove meter & feedback system technical plan
-├── WEBRTC_ARCHITECTURE.md  # WebRTC migration architecture (future)
-└── SURVEY_QUESTIONS.md     # User feedback survey questions
+├── .env                    # Your environment variables (not committed)
+├── *.html                  # Generated files (not committed)
+├── archive/                # V0 templates (reference only)
+├── v1-planning/            # V1 technical specifications
+├── README.md               # This file
+├── TODO.md                 # Task tracking
+├── ROADMAP.md              # Product roadmap
+└── CLAUDE.md               # Instructions for AI assistants
 ```
 
 ---
@@ -50,105 +49,56 @@ jam-mvp/
 
 1. Go to [ably.com/sign-up](https://ably.com/sign-up)
 2. Create a free account
-3. Create a new app (call it "Jam Session" or whatever you like)
-4. Copy the API key from the app dashboard (looks like: `xxxxx.yyyyy:zzzzzzzz`)
+3. Create a new app (call it "Jam Session")
+4. Copy the API key from the app dashboard
 
 ### 2. Set Up Environment Variables
-
-Create a `.env` file from the example:
 
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` and add your Ably API key:
-
 ```bash
 ABLY_API_KEY=xxxxx.yyyyy:zzzzzzzz
 ```
 
 ### 3. Build the Project
 
-Run the build script to generate the HTML files:
-
 ```bash
 python3 build.py
 ```
 
-This will create `host.html`, `play.html`, and `index.html` from the templates with your API key injected.
+This generates the HTML files from templates with your API key injected.
 
 ### 4. Run Locally
 
-You need a local web server because browsers restrict some features on `file://` URLs.
-
-**Option A: Python (easiest)**
 ```bash
-# Python 3
 python3 -m http.server 8000
-
-# Or if 'python' points to Python 3 on your system
-python -m http.server 8000
 ```
 
-**Option B: Node.js**
-```bash
-npx serve .
-```
+### 5. Open the App
 
-**Option C: VS Code**
-Install the "Live Server" extension and click "Go Live"
+Go to `http://localhost:8000/`
 
-### 5. Open the Host Screen
-
-On your laptop/TV, go to either:
-```
-http://localhost:8000/
-```
-or
-```
-http://localhost:8000/host.html
-```
-
-Both URLs load the host screen. You'll see:
-- A 4-digit room code
-- **QR codes** for each instrument (Drums, Bass, Chords)
-- Join URLs for manual entry
-
-**Note on localhost**: If you see an orange warning about using localhost, enter your computer's IP address in the input box and click "Update" to make the QR codes work on phones.
+You'll see the **landing page** with setup instructions. Click **"Continue"** to proceed to the host screen, then click **"OPEN ROOM"** to start.
 
 ### 6. Connect Players
 
-**Easiest way: Scan QR Code**
-1. Open your phone's camera app
-2. Point it at one of the QR codes on the host screen
-3. Tap the notification to join
+**Using QR Codes (easiest):**
+1. The lobby shows QR codes for each instrument
+2. Players scan with their phone camera
+3. Each player enters their name and joins
 
-**Alternative: Manual URL entry**
+**Note on localhost:** If testing locally, enter your computer's IP address in the yellow warning box to make QR codes work on phones.
 
-On each phone, go to one of the URLs shown on the host screen:
-```
-http://[your-computer-ip]:8000/play.html?room=XXXX&instrument=drums
-http://[your-computer-ip]:8000/play.html?room=XXXX&instrument=bass
-http://[your-computer-ip]:8000/play.html?room=XXXX&instrument=chords
-```
+### 7. Start the Jam!
 
-**To find your computer's IP:**
-- **Mac**: `ipconfig getifaddr en0` in Terminal, or System Settings → Network → Wi-Fi
-- **Windows**: `ipconfig` in Command Prompt (look for IPv4 Address)
-- **Linux**: `hostname -I` or `ip addr`
-
-Look for an address like `192.168.x.x` or `10.0.x.x` (NOT `127.0.0.1`)
-
-### 7. Jam!
-
-Once players are connected, click **"START HOST"** on the host screen:
+Once players have joined, click **"START JAM SESSION"**:
 - The 3-minute timer begins
-- Players tap their instrument controls
-- All sounds play on the shared screen (not on phones)
-- Sounds are automatically quantized to the beat
-- Visual metronome shows the 4-beat pattern in sync
-
-**To end early**: Click the red **"End Session"** button next to the timer
+- Players build patterns on their phones
+- All sounds play on the host screen in perfect sync
+- The visualizer responds to the music
 
 ---
 
@@ -159,216 +109,140 @@ Once players are connected, click **"START HOST"** on the host screen:
 ```
 ┌─────────────────────┐
 │   HOST (TV/Laptop)  │
+│   - 16-step loop    │
 │   - Tone.js audio   │
 │   - Visualizer      │
-│   - Beat sync       │
 └──────────┬──────────┘
            │ Ably (WebSocket)
-     ┌─────┴─────┬─────────────┐
-     ▼           ▼             ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐
-│ Phone 1 │ │ Phone 2 │ │ Phone 3 │
-│ (Drums) │ │ (Bass)  │ │(Chords) │
-└─────────┘ └─────────┘ └─────────┘
+     ┌─────┴─────┬─────────┬─────────┐
+     ▼           ▼         ▼         ▼
+┌─────────┐ ┌─────────┐ ┌───────┐ ┌────────┐
+│  Drums  │ │  Perc   │ │ Bass  │ │ Chords │
+│ 4×4 grid│ │ 4×4 grid│ │ Piano │ │4 slots │
+└─────────┘ └─────────┘ └───────┘ └────────┘
 ```
 
-- **Phones send control messages** (e.g., `{type: 'drums', note: 'kick', velocity: 0.8}`)
-- **Host receives messages and plays sounds** via Tone.js
-- **Drums are quantized** to 8th notes; bass & chords play immediately for expressive control
-- **Beat indicators** use time-based sync (improved but may drift slightly due to network latency)
-- **Stereo mixing** - Drums panned across stereo field for spatial separation
-- **Frequency separation** - Chords raised one octave to avoid clashing with bass
+- **Phones send patterns** to the host
+- **Host plays all sounds** in sync with the 16-step loop
+- **No latency issues** — timing is handled entirely by the host
+- **Visualizer** responds to audio with pulsing colors and particles
 
 ### Instruments
 
-| Instrument | Controls | Sound | Mix Position |
-|------------|----------|-------|--------------|
-| **Drums** 🥁 | 4 pads: Kick, Snare, Hi-Hat, Clap | Synthesized drums with velocity sensitivity (MembraneSynth, NoiseSynth, MetalSynth) | Kick: Center, Snare: Left, Hat: Right, Clap: Left |
-| **Bass** 🎸 | 7 keys: C, D, E, F, G, A, B | MonoSynth with filter and hold-to-sustain (notes mapped to C minor pentatonic, octave 2) | Center (foundation) |
-| **Chords** 🎹 | 6 pads: Am, F, C, G, Em, Dm | PolySynth playing 3-note chords with hold-to-sustain (octaves 3-4) | Slight right |
+| Instrument | UI | Update Mode |
+|------------|-----|-------------|
+| **Drums** 🥁 | 4×4 grid (Kick, Snare, HiHat, Clap) | Live — changes sent immediately |
+| **Percussion** 🎵 | 4×4 grid (Cowbell, Tambourine, Shaker, Conga) | Live — changes sent immediately |
+| **Bass** 🎸 | Piano roll (6 notes × 16 steps) | Draft — tap "Send to Mix" |
+| **Chords** 🎹 | 4 slots (Am, F, C, G, Em, Dm) | Draft — tap "Send to Mix" |
 
-### Musical Constraints
+### Session Flow
 
-To make everything "sound good without trying":
-- **Drums** are **quantized to 8th notes** with velocity sensitivity for expressive rhythm
-- **Bass & Chords** play **immediately** (no quantization) for expressive, natural feel
-- Bass notes are **mapped to C minor pentatonic** (no wrong notes)
-- Chords are **6 diatonic options** in C major/A minor (Am, F, C, G, Em, Dm) - all work together
-- Fixed tempo of **120 BPM**
-- **Hold-to-sustain** on bass and chords for melodic/harmonic control
+1. **Open Room** — Host generates room code and QR codes
+2. **Players Join** — Players scan QR, enter name, wait in lobby
+3. **Start Session** — Host clicks "Start Jam Session", timer begins
+4. **Jam!** — Players build patterns, host plays audio and shows visualizer
+5. **End Session** — Timer runs out or host ends early
 
 ---
 
-## Testing Locally (Solo)
+## Testing Locally
 
-You can test the full experience by yourself:
+You can test by yourself using multiple browser tabs:
 
-1. Open `host.html` in one browser tab
-2. Open `play.html?room=XXXX&instrument=drums` in another tab
-3. Open `play.html?room=XXXX&instrument=bass` in another tab
-4. Open `play.html?room=XXXX&instrument=chords` in another tab
+1. Open `host.html` in one tab
+2. Click "OPEN ROOM"
+3. Open instrument URLs in other tabs:
+   - `drums.html?room=XXXX`
+   - `percussion.html?room=XXXX`
+   - `bass.html?room=XXXX`
+   - `chords.html?room=XXXX`
 
 Replace `XXXX` with the room code shown on the host screen.
 
 ---
 
-## Deploying for Real Testing
+## Deployment
 
-### Option A: Vercel (Recommended - Automatic Deployments)
+### Vercel (Recommended)
 
 **Live URL:** https://jam-mvp-xi.vercel.app
 
-The app is deployed on Vercel with automatic deployments enabled:
-- **Every push to `main` branch** triggers a new production deployment
-- **Pull requests** get preview deployments automatically
-- **Free tier** includes HTTPS, custom domains, and 100GB bandwidth/month
-
-**First-time setup:**
-```bash
-# Install Vercel CLI (optional - only needed for manual deploys)
-npm install -g vercel
-
-# Deploy manually (if not using auto-deploy from GitHub)
-npx vercel --prod
-```
-
-**Recommended Git Workflow:**
-
-Since Vercel auto-deploys from `main`, use feature branches to avoid accidental deploys:
+The app auto-deploys from the `main` branch:
 
 ```bash
-# Create a feature branch for your work
-git checkout -b feature/my-new-feature
-
-# Make changes, commit, and push to feature branch
-git add .
-git commit -m "Add new feature"
-git push origin feature/my-new-feature
+# Work on feature branch
+git checkout feature/v1-sequencer
+# Make changes, commit, push
+git push origin feature/v1-sequencer
 
 # When ready to deploy, merge to main
 git checkout main
-git merge feature/my-new-feature
-git push origin main  # This triggers a Vercel deployment
+git merge feature/v1-sequencer
+git push origin main  # Triggers deployment
 ```
 
-**To disable auto-deploy from main:**
-- Go to Vercel dashboard → Project Settings → Git
-- Configure which branches trigger deployments
+### Security Note
 
-**Security Best Practice:**
+For production, use a restricted Ably API key with only Subscribe and Publish capabilities.
 
-For production deployment on Vercel, use a **restricted Ably API key**:
-1. In Ably dashboard → API Keys → Create New Key
-2. Enable only: `Subscribe` and `Publish` capabilities (disable admin, history, stats, etc.)
-3. Add this restricted key to Vercel environment variables
-4. Keep your root key for local development only
+### Analytics (Optional)
 
-This limits potential damage if someone extracts the API key from client-side code.
+The app supports Google Analytics 4 for tracking session metrics. To enable:
 
-### Option B: ngrok (Quick & Free for Testing)
+1. Create a GA4 property at [analytics.google.com](https://analytics.google.com)
+2. Add `GA4_MEASUREMENT_ID=G-XXXXXXXXXX` to your `.env` file
+3. Run `python3 build.py` to regenerate HTML files
 
-1. Install ngrok: https://ngrok.com/download
-2. Run your local server: `python -m http.server 8000`
-3. In another terminal: `ngrok http 8000`
-4. Share the ngrok URL (e.g., `https://abc123.ngrok.io/host.html`)
+Analytics tracks session lifecycle (start, end, completion rate), player joins, and survey engagement. No personal data is collected. See `ANALYTICS_PLAN.md` for details.
 
 ---
 
-## Customization Ideas
+## Customization
 
-### Change the Tempo
-In `host.template.html`, find:
+Edit the template files, then run `python3 build.py`:
+
+### Change Tempo
 ```javascript
-const BPM = 120;
+const BPM = 120;  // in host.template.html
 ```
-Then run `python3 build.py` to regenerate files.
 
 ### Change Session Length
-In `host.template.html`, find:
 ```javascript
-const SESSION_DURATION = 180; // 3 minutes in seconds
+const SESSION_DURATION = 180;  // seconds
 ```
-Then run `python3 build.py` to regenerate files.
 
-### Add More Drum Sounds
-In `host.template.html`, add to `drumSynths` object and update `playDrum()` function, then rebuild.
-
-### Change the Scale
-In `host.template.html`, modify the `bassNotes` object to use different notes, then rebuild.
-
-### Change Chord Progression
-In `host.template.html`, modify the `chordNotes` object, then rebuild.
-
-**Note:** Always edit the `.template.html` files, not the generated `.html` files, then run `python3 build.py`.
+### Add Sounds
+Add synths to the host template and buttons to the instrument templates.
 
 ---
 
 ## Troubleshooting
 
 ### "Audio not playing"
-- Make sure you clicked "START HOST" on the host screen
-- Check browser console for errors
+- Make sure you clicked "START JAM SESSION" on the host
 - Try a different browser (Chrome works best)
+- Check browser console for errors
 
-### "Players can't connect" or "QR codes don't work"
-- Make sure both devices are on the same WiFi network
-- If using `localhost`, enter your computer's IP in the orange warning box on the host screen
-- Check that you're using your computer's local IP, not `localhost`
-- Verify the Ably API key is correct and properly injected by the build script
+### "Players can't connect"
+- Ensure all devices are on the same WiFi
+- Enter your computer's IP in the localhost warning box
+- Check that the Ably API key is correct
 
-### "High latency / delay"
-- This MVP uses a cloud service (Ably) which adds some latency
-- For lower latency, consider WebRTC (see Phone Party framework)
-- The quantization helps mask small delays
-
-### "Beat indicators not in sync between host and phones"
-- Beat indicators use time-based synchronization but may drift due to network latency
-- Current implementation has known sync issues that need improvement
-- Try refreshing phone browsers if drift is severe
-- For production use, a lower-latency solution (e.g., WebRTC) would be needed
-
----
-
-## User Feedback
-
-The app includes an integrated feedback survey that appears automatically at the end of each session:
-- **Host screen:** QR code and link button on end overlay
-- **Player screens:** "Share Feedback" button on end overlay
-- **Survey URL:** https://forms.gle/3KSkcUiae2DvfePr9
-
-The survey collects feedback on:
-- Core experience (fun factor, would you play with friends)
-- Technical performance (timing, responsiveness)
-- Instrument feel and improvements needed
-- Overall product validation
-
----
-
-## Next Steps
-
-See **ROADMAP.md** for comprehensive feature prioritization and implementation planning.
-
-**Current Phase:** Feedback collection (waiting for 10-20 survey responses)
-
-**Recently completed:**
-- ✅ **Analytics Integration** - Google Analytics 4 for product validation metrics (see ANALYTICS_PLAN.md)
-
-**Planned improvements:**
-1. **Groove Meter & Feedback System** - Make it feel more game-like with goals and progression (see GROOVE_FEEDBACK_PLAN.md)
-2. **Lower latency** - Migrate to WebRTC for <50ms latency (see WEBRTC_ARCHITECTURE.md)
-3. **More instruments** - Melody sequencer, additional percussion, FX controller
-4. **Visual polish** - Better visualizer, player avatars, social sharing image
-5. **Session recording** - Save and share jam sessions
+### "QR codes don't work on phone"
+- Enter your computer's local IP (192.168.x.x) in the IP override field
+- QR codes will regenerate with the correct URL
 
 ---
 
 ## Credits
 
-- **Tone.js** - Web Audio framework: https://tonejs.github.io/
-- **Ably** - Real-time messaging: https://ably.com/
+- **Tone.js** — Web Audio framework: https://tonejs.github.io/
+- **Ably** — Real-time messaging: https://ably.com/
+- **QRCode.js** — QR code generation
 
 ---
 
 ## License
 
-MIT - Do whatever you want with this code!
+MIT — Do whatever you want with this code!

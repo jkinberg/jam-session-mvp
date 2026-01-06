@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jam Session</title>
+    <meta name="description" content="Make music together with friends. A multiplayer music jam where players use their phones to build loops on a shared screen.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jam-mvp-xi.vercel.app/">
+    <meta property="og:title" content="Jam Session">
+    <meta property="og:description" content="Make music together with friends. A multiplayer music jam where players use their phones to build loops on a shared screen.">
+    <meta property="og:image" content="https://jam-mvp-xi.vercel.app/social-share-v2.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://jam-mvp-xi.vercel.app/">
+    <meta name="twitter:title" content="Jam Session">
+    <meta name="twitter:description" content="Make music together with friends. A multiplayer music jam where players use their phones to build loops on a shared screen.">
+    <meta name="twitter:image" content="https://jam-mvp-xi.vercel.app/social-share-v2.jpg">
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('js', new Date());
+            gtag('config', GA4_MEASUREMENT_ID, { 'anonymize_ip': true });
+        }
+
+        function trackEvent(eventName, params = {}) {
+            if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+                gtag('event', eventName, params);
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #00d4ff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 48px;
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .instructions h2 {
+            font-size: 16px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+            width: 44px;
+            text-align: center;
+        }
+
+        .step-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.4;
+        }
+
+        .continue-btn {
+            display: inline-block;
+            padding: 18px 48px;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #00d4ff, #a855f7);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .continue-btn:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            margin-top: 48px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .footer a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎵</div>
+        <h1>Jam Session</h1>
+        <p class="tagline">Make music together with friends</p>
+
+        <div class="instructions">
+            <h2>Before you start</h2>
+
+            <div class="step">
+                <div class="step-icon">🖥️</div>
+                <div class="step-content">
+                    <h3>Use a computer or TV</h3>
+                    <p>This screen is the host — it plays all the music. Open it on a laptop, desktop, or cast to a TV.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-icon">🔊</div>
+                <div class="step-content">
+                    <h3>Turn up the sound</h3>
+                    <p>All audio plays from this device. Make sure your speakers are on and the volume is up.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-icon">📱</div>
+                <div class="step-content">
+                    <h3>Get your phones ready</h3>
+                    <p>Players will scan QR codes to join on their phones. Each person controls a different instrument.</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="host.html" class="continue-btn" onclick="trackEvent('landing_continue_clicked')">
+            Continue
+        </a>
+
+        <div class="footer">
+            <p>Up to 4 players • 3-minute jam sessions • No app download required</p>
+        </div>
+    </div>
+</body>
+</html>
