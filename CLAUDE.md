@@ -74,7 +74,7 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `TODO.md` | Task tracking | Implementation progress |
 | `ROADMAP.md` | Product roadmap | Strategic planning |
 | `ANALYTICS_PLAN.md` | GA4 analytics plan | Event tracking reference |
-| `GROOVE_FEEDBACK_PLAN.md` | Future feedback system | Reference for gamification |
+| `v0-planning/` | V0 technical specs | WebRTC, groove meter, V0 architecture |
 | `archive/` | V0 templates | Reference only |
 
 ---
