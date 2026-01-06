@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Percussion Sound Test</title>
+    <title>Latin Percussion Sound Test v4</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,31 +13,31 @@
             background: #1a1a2e;
             color: white;
             padding: 20px;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .subtitle {
             text-align: center;
             color: #888;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .sound-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
         .sound-btn {
             background: #2d2d44;
             border: none;
             border-radius: 12px;
-            padding: 30px 20px;
+            padding: 25px 15px;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -46,48 +46,59 @@
             transform: scale(1.02);
         }
         .sound-btn:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
         }
         .sound-btn.cowbell { background: #f59e0b; }
+        .sound-btn.clave { background: #8b5cf6; }
+        .sound-btn.triangle { background: #06b6d4; }
         .sound-btn.tambourine { background: #10b981; }
-        .sound-btn.shaker { background: #6366f1; }
-        .sound-btn.conga { background: #f43f5e; }
+        .sound-btn.conga-high { background: #f43f5e; }
+        .sound-btn.conga-low { background: #dc2626; }
 
         .sound-btn .emoji {
-            font-size: 32px;
+            font-size: 28px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+        }
+        .sound-btn .desc {
+            font-size: 11px;
+            font-weight: normal;
+            color: rgba(255,255,255,0.7);
+            margin-top: 4px;
         }
 
-        .params {
+        .section {
             background: #2d2d44;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
-        .params h3 {
-            margin-top: 0;
+        .section h3 {
+            margin: 0 0 12px 0;
             color: #888;
-            font-size: 14px;
+            font-size: 12px;
             text-transform: uppercase;
         }
         .param-row {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+        }
+        .param-row:last-child {
+            margin-bottom: 0;
         }
         .param-row label {
-            width: 120px;
-            font-size: 14px;
+            width: 100px;
+            font-size: 13px;
         }
         .param-row input {
             flex: 1;
         }
         .param-row span {
-            width: 60px;
+            width: 50px;
             text-align: right;
             font-family: monospace;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .start-btn {
@@ -100,30 +111,47 @@
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .start-btn:hover {
             background: #4338ca;
+        }
+        .start-btn.enabled {
+            background: #10b981;
         }
 
         .note {
             background: #2d2d44;
             border-radius: 8px;
-            padding: 15px;
-            font-size: 14px;
+            padding: 12px;
+            font-size: 13px;
             color: #888;
         }
         .note code {
             background: #1a1a2e;
-            padding: 2px 6px;
+            padding: 2px 5px;
             border-radius: 4px;
             color: #10b981;
+            font-size: 12px;
+        }
+        .sources {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #3d3d54;
+        }
+        .sources a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .sources a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h1>Latin Percussion Sounds</h1>
-    <p class="subtitle">V1 Sequencer Sound Preview</p>
+    <h1>Latin Percussion v4</h1>
+    <p class="subtitle">Triangle now uses FM synthesis for metallic ring</p>
 
     <button class="start-btn" id="startBtn">Click to Enable Audio</button>
 
@@ -131,53 +159,101 @@
         <button class="sound-btn cowbell" data-sound="cowbell">
             <span class="emoji">🔔</span>
             Cowbell
+            <div class="desc">From bolt-audio-sequencer</div>
+        </button>
+        <button class="sound-btn clave" data-sound="clave">
+            <span class="emoji">🪵</span>
+            Clave
+            <div class="desc">Woody click</div>
+        </button>
+        <button class="sound-btn triangle" data-sound="triangle">
+            <span class="emoji">🔺</span>
+            Triangle
+            <div class="desc">High metallic ding</div>
         </button>
         <button class="sound-btn tambourine" data-sound="tambourine">
             <span class="emoji">🎊</span>
             Tambourine
+            <div class="desc">Metallic + noise</div>
         </button>
-        <button class="sound-btn shaker" data-sound="shaker">
-            <span class="emoji">🎵</span>
-            Shaker
-        </button>
-        <button class="sound-btn conga" data-sound="conga">
+        <button class="sound-btn conga-high" data-sound="conga-high">
             <span class="emoji">🥁</span>
-            Conga
+            Conga High
+            <div class="desc">Slap tone</div>
+        </button>
+        <button class="sound-btn conga-low" data-sound="conga-low">
+            <span class="emoji">🥁</span>
+            Conga Low
+            <div class="desc">Deep tone</div>
         </button>
     </div>
 
-    <div class="params">
-        <h3>Cowbell Parameters</h3>
+    <div class="section">
+        <h3>Cowbell Tuning (from bolt-audio-sequencer)</h3>
         <div class="param-row">
-            <label>Frequency</label>
-            <input type="range" id="cowbell-freq" min="400" max="1200" value="800">
-            <span id="cowbell-freq-val">800</span>
+            <label>Osc 1 Freq</label>
+            <input type="range" id="cb-freq1" min="600" max="1000" value="800">
+            <span id="cb-freq1-val">800</span>
         </div>
+        <div class="param-row">
+            <label>Osc 2 Freq</label>
+            <input type="range" id="cb-freq2" min="400" max="700" value="540">
+            <span id="cb-freq2-val">540</span>
+        </div>
+        <div class="param-row">
+            <label>Filter Freq</label>
+            <input type="range" id="cb-filter" min="600" max="1200" value="800">
+            <span id="cb-filter-val">800</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Triangle Tuning (FM Synthesis)</h3>
         <div class="param-row">
             <label>Harmonicity</label>
-            <input type="range" id="cowbell-harm" min="1" max="10" value="5" step="0.5">
-            <span id="cowbell-harm-val">5</span>
+            <input type="range" id="tri-harm" min="1" max="8" value="5.1" step="0.1">
+            <span id="tri-harm-val">5.1</span>
+        </div>
+        <div class="param-row">
+            <label>Mod Index</label>
+            <input type="range" id="tri-mod" min="1" max="8" value="4" step="0.5">
+            <span id="tri-mod-val">4</span>
         </div>
     </div>
 
-    <div class="params">
-        <h3>Conga Parameters</h3>
+    <div class="section">
+        <h3>Conga Tuning</h3>
         <div class="param-row">
-            <label>Pitch Decay</label>
-            <input type="range" id="conga-decay" min="0.01" max="0.2" value="0.08" step="0.01">
-            <span id="conga-decay-val">0.08</span>
+            <label>High Pitch</label>
+            <input type="range" id="conga-high-pitch" min="200" max="400" value="300">
+            <span id="conga-high-pitch-val">300</span>
         </div>
         <div class="param-row">
-            <label>Octaves</label>
-            <input type="range" id="conga-octaves" min="2" max="8" value="5">
-            <span id="conga-octaves-val">5</span>
+            <label>Low Pitch</label>
+            <input type="range" id="conga-low-pitch" min="100" max="250" value="170">
+            <span id="conga-low-pitch-val">170</span>
+        </div>
+        <div class="param-row">
+            <label>Pitch Decay</label>
+            <input type="range" id="conga-decay" min="0.02" max="0.15" value="0.06" step="0.01">
+            <span id="conga-decay-val">0.06</span>
         </div>
     </div>
 
     <div class="note">
-        <strong>How to use:</strong> Click "Enable Audio" first, then tap the sound buttons.
-        Adjust sliders to tweak the synth parameters. Once you find settings you like,
-        the values can be copied into <code>host.template.html</code>.
+        <strong>V4 - Triangle now uses FM synthesis:</strong><br>
+        • <strong>Triangle</strong>: FM synth with non-integer harmonicity (5.1) for inharmonic metallic partials, high mod index (4) for brightness, long decay<br>
+        • Cowbell: square waves at 800Hz + 540Hz (from bolt-audio-sequencer)<br>
+        • Clave: woody click sound<br>
+        • Tambourine: metallic ring + noise<br>
+        • Conga High/Low: tunable pitch variants
+
+        <div class="sources">
+            <strong>Sources:</strong><br>
+            <a href="https://tonejs.github.io/docs/14.7.38/FMSynth" target="_blank">Tone.js FMSynth docs</a><br>
+            <a href="https://github.com/jkinberg/bolt-audio-sequencer" target="_blank">bolt-audio-sequencer (cowbell)</a><br>
+            <a href="https://www.soundonsound.com/techniques/synthesizing-cowbells-claves" target="_blank">Sound On Sound: Cowbells & Claves</a>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -185,58 +261,164 @@
         let audioStarted = false;
         let synths = {};
 
-        // Synth definitions (tweak these!)
         function createSynths() {
-            synths = {
-                cowbell: new Tone.MetalSynth({
-                    frequency: parseFloat(document.getElementById('cowbell-freq').value),
-                    harmonicity: parseFloat(document.getElementById('cowbell-harm').value),
-                    modulationIndex: 32,
-                    resonance: 4000,
-                    envelope: {
-                        attack: 0.001,
-                        decay: 0.1,
-                        release: 0.05
-                    }
-                }).toDestination(),
+            // ===== COWBELL =====
+            // From bolt-audio-sequencer: two SQUARE oscillators + bandpass filter
+            // Frequencies 800Hz and 540Hz, filter at 800Hz with high Q
+            // Using a limiter to prevent clipping on rapid triggers
+            const cowbellLimiter = new Tone.Limiter(-3).toDestination();
+            const cowbellGain = new Tone.Gain(0).connect(cowbellLimiter);
 
-                tambourine: new Tone.NoiseSynth({
-                    noise: { type: 'white' },
-                    envelope: {
-                        attack: 0.001,
-                        decay: 0.15,
-                        sustain: 0,
-                        release: 0.05
-                    }
-                }).toDestination(),
+            const cowbellFilter = new Tone.Filter({
+                type: "bandpass",
+                frequency: parseFloat(document.getElementById('cb-filter').value),
+                Q: 10
+            }).connect(cowbellGain);
 
-                shaker: new Tone.NoiseSynth({
-                    noise: { type: 'pink' },
-                    envelope: {
-                        attack: 0.005,
-                        decay: 0.1,
-                        sustain: 0,
-                        release: 0.05
-                    }
-                }).toDestination(),
+            synths.cowbellGain = cowbellGain;
+            synths.cowbellFilter = cowbellFilter;
+            synths.cowbellLimiter = cowbellLimiter;
 
-                conga: new Tone.MembraneSynth({
-                    pitchDecay: parseFloat(document.getElementById('conga-decay').value),
-                    octaves: parseFloat(document.getElementById('conga-octaves').value),
-                    envelope: {
-                        attack: 0.001,
-                        decay: 0.4,
-                        sustain: 0,
-                        release: 0.1
-                    }
-                }).toDestination()
-            };
+            // Store oscillator references for cleanup
+            synths.cowbellOsc1 = null;
+            synths.cowbellOsc2 = null;
 
-            // Adjust volumes
-            synths.cowbell.volume.value = -6;
-            synths.tambourine.volume.value = -10;
-            synths.shaker.volume.value = -12;
-            synths.conga.volume.value = -3;
+            // ===== TRIANGLE (instrument) =====
+            // FM synthesis with non-integer harmonicity for metallic/inharmonic sound
+            // High frequency, long ringing decay
+            synths.triangle = new Tone.FMSynth({
+                harmonicity: 5.1,           // Non-integer for inharmonic metallic tone
+                modulationIndex: 4,         // High for bright metallic character
+                oscillator: {
+                    type: "sine"
+                },
+                modulation: {
+                    type: "triangle"
+                },
+                envelope: {
+                    attack: 0.001,
+                    decay: 2.5,             // Long ring
+                    sustain: 0,
+                    release: 1.5
+                },
+                modulationEnvelope: {
+                    attack: 0.001,
+                    decay: 1.5,
+                    sustain: 0.2,
+                    release: 1
+                }
+            }).toDestination();
+            synths.triangle.volume.value = -8;
+
+            // ===== CLAVE =====
+            // Woody click: triangle osc with very short decay
+            synths.clave = new Tone.MembraneSynth({
+                pitchDecay: 0.008,
+                octaves: 2,
+                oscillator: { type: "sine" },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.08,
+                    sustain: 0,
+                    release: 0.01
+                }
+            }).toDestination();
+            synths.clave.volume.value = -3;
+
+            // ===== TAMBOURINE =====
+            // Metallic ring + white noise burst
+            const tambMix = new Tone.Gain(0.5).toDestination();
+
+            synths.tambMetal = new Tone.MetalSynth({
+                frequency: 300,
+                harmonicity: 5.1,
+                modulationIndex: 16,
+                resonance: 3000,
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.1,
+                    release: 0.05
+                }
+            }).connect(tambMix);
+            synths.tambMetal.volume.value = -8;
+
+            synths.tambNoise = new Tone.NoiseSynth({
+                noise: { type: "white" },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.12,
+                    sustain: 0,
+                    release: 0.03
+                }
+            }).connect(tambMix);
+            synths.tambNoise.volume.value = -12;
+
+            // ===== CONGA HIGH =====
+            synths.congaHigh = new Tone.MembraneSynth({
+                pitchDecay: parseFloat(document.getElementById('conga-decay').value),
+                octaves: 4,
+                oscillator: { type: "sine" },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.25,
+                    sustain: 0,
+                    release: 0.1
+                }
+            }).toDestination();
+            synths.congaHigh.volume.value = -2;
+
+            // ===== CONGA LOW =====
+            synths.congaLow = new Tone.MembraneSynth({
+                pitchDecay: parseFloat(document.getElementById('conga-decay').value) * 1.5,
+                octaves: 5,
+                oscillator: { type: "sine" },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.4,
+                    sustain: 0,
+                    release: 0.15
+                }
+            }).toDestination();
+            synths.congaLow.volume.value = 0;
+        }
+
+        function playCowbell() {
+            const now = Tone.now();
+            const freq1 = parseFloat(document.getElementById('cb-freq1').value);
+            const freq2 = parseFloat(document.getElementById('cb-freq2').value);
+
+            // Stop and dispose of any existing oscillators to prevent overlap/clipping
+            if (synths.cowbellOsc1) {
+                try { synths.cowbellOsc1.stop(); synths.cowbellOsc1.dispose(); } catch(e) {}
+            }
+            if (synths.cowbellOsc2) {
+                try { synths.cowbellOsc2.stop(); synths.cowbellOsc2.dispose(); } catch(e) {}
+            }
+
+            // Create fresh oscillators for each trigger
+            synths.cowbellOsc1 = new Tone.Oscillator({
+                type: "square",
+                frequency: freq1
+            }).connect(synths.cowbellFilter);
+
+            synths.cowbellOsc2 = new Tone.Oscillator({
+                type: "square",
+                frequency: freq2
+            }).connect(synths.cowbellFilter);
+
+            synths.cowbellOsc1.start(now).stop(now + 0.35);
+            synths.cowbellOsc2.start(now).stop(now + 0.35);
+
+            // Manual envelope via gain node (matching bolt-audio-sequencer)
+            synths.cowbellGain.gain.cancelScheduledValues(now);
+            synths.cowbellGain.gain.setValueAtTime(0.25, now);
+            synths.cowbellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        }
+
+        function playTriangle() {
+            // High pitched metallic ding using FM synthesis
+            // Frequency around A6-C7 range for authentic triangle sound
+            synths.triangle.triggerAttackRelease("A6", "2n");
         }
 
         // Start audio
@@ -244,8 +426,9 @@
             await Tone.start();
             createSynths();
             audioStarted = true;
-            document.getElementById('startBtn').textContent = 'Audio Enabled ✓';
-            document.getElementById('startBtn').style.background = '#10b981';
+            const btn = document.getElementById('startBtn');
+            btn.textContent = 'Audio Enabled ✓';
+            btn.classList.add('enabled');
         });
 
         // Sound buttons
@@ -257,15 +440,29 @@
                 }
 
                 const sound = btn.dataset.sound;
+                const highPitch = parseFloat(document.getElementById('conga-high-pitch').value);
+                const lowPitch = parseFloat(document.getElementById('conga-low-pitch').value);
 
-                if (sound === 'cowbell') {
-                    synths.cowbell.triggerAttackRelease('C6', '16n');
-                } else if (sound === 'tambourine') {
-                    synths.tambourine.triggerAttackRelease('16n');
-                } else if (sound === 'shaker') {
-                    synths.shaker.triggerAttackRelease('16n');
-                } else if (sound === 'conga') {
-                    synths.conga.triggerAttackRelease('C3', '8n');
+                switch(sound) {
+                    case 'cowbell':
+                        playCowbell();
+                        break;
+                    case 'clave':
+                        synths.clave.triggerAttackRelease(1200, '32n');
+                        break;
+                    case 'triangle':
+                        playTriangle();
+                        break;
+                    case 'tambourine':
+                        synths.tambMetal.triggerAttackRelease('16n');
+                        synths.tambNoise.triggerAttackRelease('16n');
+                        break;
+                    case 'conga-high':
+                        synths.congaHigh.triggerAttackRelease(highPitch, '8n');
+                        break;
+                    case 'conga-low':
+                        synths.congaLow.triggerAttackRelease(lowPitch, '8n');
+                        break;
                 }
             });
         });
@@ -274,25 +471,32 @@
         function setupSlider(id, callback) {
             const slider = document.getElementById(id);
             const valSpan = document.getElementById(id + '-val');
+            if (!slider || !valSpan) return;
+
             slider.addEventListener('input', () => {
                 valSpan.textContent = slider.value;
-                if (audioStarted) {
+                if (audioStarted && callback) {
                     callback(parseFloat(slider.value));
                 }
             });
         }
 
-        setupSlider('cowbell-freq', (val) => {
-            synths.cowbell.frequency.value = val;
+        setupSlider('cb-freq1', null);
+        setupSlider('cb-freq2', null);
+        setupSlider('cb-filter', (val) => {
+            if (synths.cowbellFilter) synths.cowbellFilter.frequency.value = val;
         });
-        setupSlider('cowbell-harm', (val) => {
-            synths.cowbell.harmonicity = val;
+        setupSlider('tri-harm', (val) => {
+            if (synths.triangle) synths.triangle.harmonicity.value = val;
         });
+        setupSlider('tri-mod', (val) => {
+            if (synths.triangle) synths.triangle.modulationIndex.value = val;
+        });
+        setupSlider('conga-high-pitch', null);
+        setupSlider('conga-low-pitch', null);
         setupSlider('conga-decay', (val) => {
-            synths.conga.pitchDecay = val;
-        });
-        setupSlider('conga-octaves', (val) => {
-            synths.conga.octaves = val;
+            if (synths.congaHigh) synths.congaHigh.pitchDecay = val;
+            if (synths.congaLow) synths.congaLow.pitchDecay = val * 1.5;
         });
     </script>
 </body>
