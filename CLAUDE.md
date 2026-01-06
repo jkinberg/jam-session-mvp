@@ -64,6 +64,7 @@ HOST (TV/laptop)                    PHONES (controllers)
 
 | File | Purpose | Edit for... |
 |------|---------|-------------|
+| `index.template.html` | Landing page with instructions | Welcome message, setup instructions |
 | `host.template.html` | Host screen with lobby, sequencer, visualizer | Lobby flow, audio, visuals |
 | `drums.template.html` | Drums phone UI | 4×4 grid, sound selector, live mode |
 | `percussion.template.html` | Percussion phone UI | Latin sounds, same pattern as drums |

@@ -51,6 +51,15 @@ Google Analytics 4 (GA4) tracking for Jam Session V1 (Sequencer). Focus on **pro
 
 ## V1 Events Specification
 
+### Landing Page Events (`index.template.html`)
+
+```javascript
+// User clicks Continue to proceed to host screen
+trackEvent('landing_continue_clicked');
+```
+
+---
+
 ### Host Screen Events (`host.template.html`)
 
 #### Session Lifecycle Events

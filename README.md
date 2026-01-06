@@ -22,6 +22,7 @@ A multiplayer music jam session where players use their phones to build looping 
 
 ```
 jam-mvp/
+├── index.template.html     # Landing page template
 ├── host.template.html      # Host screen template
 ├── drums.template.html     # Drums phone UI template
 ├── percussion.template.html # Percussion phone UI template
@@ -76,11 +77,11 @@ This generates the HTML files from templates with your API key injected.
 python3 -m http.server 8000
 ```
 
-### 5. Open the Host Screen
+### 5. Open the App
 
-Go to `http://localhost:8000/host.html`
+Go to `http://localhost:8000/`
 
-You'll see the **JAM SESSION** welcome screen. Click **"OPEN ROOM"** to start.
+You'll see the **landing page** with setup instructions. Click **"Continue"** to proceed to the host screen, then click **"OPEN ROOM"** to start.
 
 ### 6. Connect Players
 

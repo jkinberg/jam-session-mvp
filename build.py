@@ -109,8 +109,8 @@ def main():
 
     # V1 Sequencer templates
     templates = [
+        ('index.template.html', 'index.html'),  # Landing page
         ('host.template.html', 'host.html'),
-        ('host.template.html', 'index.html'),  # Root URL access
         ('drums.template.html', 'drums.html'),
         ('percussion.template.html', 'percussion.html'),
         ('bass.template.html', 'bass.html'),
