@@ -716,6 +716,39 @@
             color: white;
         }
 
+        .end-overlay .survey-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .end-overlay .survey-section h3 {
+            font-size: 18px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 16px;
+        }
+
+        .end-overlay .survey-qr {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .end-overlay .survey-qr canvas {
+            display: block;
+        }
+
+        .end-overlay .survey-link {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .end-overlay .survey-link:hover {
+            text-decoration: underline;
+        }
+
         /* Instrument colors */
         .instrument-row[data-instrument="drums"] {
             --instrument-color: #ef4444;
@@ -822,6 +855,12 @@
         <div class="buttons">
             <button class="play-again" id="playAgainBtn">Play Again</button>
             <button class="new-room" id="newRoomBtn">New Room</button>
+        </div>
+        <div class="survey-section">
+            <h3>How was your experience?</h3>
+            <div class="survey-qr" id="surveyQr"></div>
+            <br>
+            <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link">Take our quick survey</a>
         </div>
     </div>
 
@@ -2211,6 +2250,17 @@
 
             // Show end overlay
             document.getElementById('endOverlay').classList.remove('hidden');
+
+            // Generate survey QR code
+            const surveyQrContainer = document.getElementById('surveyQr');
+            surveyQrContainer.innerHTML = '';
+            const surveyCanvas = document.createElement('canvas');
+            surveyQrContainer.appendChild(surveyCanvas);
+            QRCode.toCanvas(surveyCanvas, 'https://forms.gle/s597sTaq6xTneg918', {
+                width: 120,
+                margin: 0,
+                color: { dark: '#000000', light: '#ffffff' }
+            });
 
             trackEvent('session_ended', {
                 room_code: state.roomCode,

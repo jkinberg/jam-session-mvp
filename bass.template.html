@@ -435,6 +435,23 @@
             color: #9ca3af;
             font-size: 16px;
         }
+
+        .ended-overlay .survey-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.1);
+            color: #00d4ff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .ended-overlay .survey-link:hover {
+            background: rgba(255,255,255,0.15);
+        }
     </style>
 </head>
 <body>
@@ -450,6 +467,7 @@
         <div class="emoji" style="font-size: 64px; margin-bottom: 20px;">🎉</div>
         <h2>Session Complete!</h2>
         <p>Thanks for jamming!</p>
+        <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link">Share your feedback</a>
     </div>
 
     <!-- Name Input Modal -->
