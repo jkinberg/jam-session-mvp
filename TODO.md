@@ -1,22 +1,23 @@
 # TODO - Jam Session
 
-## Current Focus: V1 Polish & Launch
+## Current Status: V1 Released
 
-**Branch:** `feature/v1-sequencer`
+**Live URL:** https://jam-mvp-xi.vercel.app
 **Spec:** `v1-planning/V1_SEQUENCER_SPEC.md`
 
 ---
 
-## Remaining Tasks
+## Post-Launch Tasks
 
-### Pre-Launch
-- [x] Add survey link to end screen (host and player UIs)
-- [x] Complete revised GA4 analytics integration (see ANALYTICS_PLAN.md)
-- [ ] Final mobile testing
+- [ ] Final mobile testing (iOS Safari, Android Chrome)
 - [ ] Final TV/large screen testing
-- [ ] Merge to main and deploy
+- [ ] Create demo video or screenshots
+- [ ] Monitor GA4 analytics
+- [ ] Collect user feedback via survey
 
-### Future Improvements
+---
+
+## Future Improvements
 - [ ] Longer chord sustain option (full 16-step sustain)
 - [ ] Groove meter & feedback system
 - [ ] Session recording/playback
@@ -85,7 +86,7 @@
 - [x] Host renders variable-length notes
 - [x] Host plays bass with sustain/release
 
-### Phase 6: Polish & Launch (In Progress)
+### Phase 6: Polish & Launch ✅
 - [x] Timer countdown (3:00 → 0:00)
 - [x] "End Session" button
 - [x] Lobby system (Open Room → Players Join → Start Session)
@@ -97,10 +98,10 @@
 - [x] Audio mixing improvements
 - [x] End screen with survey link
 - [x] GA4 analytics events (V1 revision complete)
-- [x] Update README
-- [x] Update CLAUDE.md
-- [ ] Final user testing
-- [ ] Merge to main
+- [x] Landing page with setup instructions
+- [x] Social sharing meta tags and image
+- [x] Update README and CLAUDE.md
+- [x] Merged to main and deployed
 
 ---
 

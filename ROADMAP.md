@@ -5,8 +5,8 @@
 This document provides strategic prioritization and planning for Jam Session features.
 
 **Last Updated:** January 2025
-**Current Version:** V1 Sequencer (in development)
-**Branch:** `feature/v1-sequencer`
+**Current Version:** V1 Sequencer (Released)
+**Live URL:** https://jam-mvp-xi.vercel.app
 **V0 Tag:** `v0` — Previous real-time trigger-based version
 
 ---
@@ -26,7 +26,7 @@ This document provides strategic prioritization and planning for Jam Session fea
 - "Recording/playback feature" — want to hear what they made
 - Requests for more sounds, especially Latin percussion
 
-### V1 - Sequencer (Current Development)
+### V1 - Sequencer (Released)
 - Players build **16-step looping patterns** instead of triggering sounds
 - Phones edit patterns → host plays them in perfect sync
 - 4 instruments: Drums, Percussion, Bass, Chords
@@ -81,7 +81,7 @@ See `TODO.md` for implementation checklist.
 - Variable-length sustained notes
 - Swipe-to-sustain gesture
 
-### Phase 6: Polish & Launch (In Progress)
+### Phase 6: Polish & Launch ✅ Complete
 
 - [x] Timer, end session button
 - [x] Lobby system (Open Room → Join → Start)
@@ -89,23 +89,23 @@ See `TODO.md` for implementation checklist.
 - [x] Audio visualizer (gradient + particles)
 - [x] Master audio bus (compressor, limiter, reverb)
 - [x] Translucent UI for visualizer
-- [x] **Survey link on end screen** (host QR + link, player links)
-- [x] **GA4 analytics integration** (V1 revision complete)
-- [ ] Final testing and documentation
-- [ ] Merge to main
+- [x] Survey link on end screen (host QR + link, player links)
+- [x] GA4 analytics integration (V1 revision complete)
+- [x] Landing page with setup instructions
+- [x] Social sharing meta tags and image
+- [x] Merged to main and deployed to production
 
 ---
 
-## Pre-Launch Checklist
+## Post-Launch Tasks
 
-Before merging V1 to main:
+V1 is now live! Remaining items:
 
-- [x] Add survey link to end screen (host + all player UIs)
-- [x] Implement GA4 analytics events for V1 flow (see ANALYTICS_PLAN.md)
 - [ ] Test on real phones (iOS Safari, Android Chrome)
 - [ ] Test on TV/large screen
-- [x] Update all documentation
 - [ ] Create demo video or screenshots
+- [ ] Monitor GA4 analytics for issues
+- [ ] Collect user feedback via survey
 
 ---
 

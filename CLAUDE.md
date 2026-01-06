@@ -8,7 +8,7 @@ This file provides context for Claude Code, Cursor, and other AI coding assistan
 
 **Jam Session** is a multiplayer music party game. Players join via phones, build looping patterns on virtual instruments, and all audio plays on a shared TV screen.
 
-**Current Status:** V1 (Sequencer) ready for final testing on `feature/v1-sequencer` branch
+**Current Status:** V1 (Sequencer) live on `main` branch
 **V0 Tag:** `v0` — Previous real-time trigger-based version
 
 **Key constraint**: This is intentionally minimal. Resist the urge to add complexity, frameworks, or dependencies unless specifically requested.
@@ -266,7 +266,7 @@ Replace `XXXX` with room code shown on host screen.
 ## Deployment & Git Workflow
 
 **Live URL:** https://jam-mvp-xi.vercel.app
-**Current Branch:** `feature/v1-sequencer`
+**Current Branch:** `main`
 
 Vercel auto-deploys:
 - Push to `main` → production deployment
@@ -275,19 +275,16 @@ Vercel auto-deploys:
 ### Recommended Workflow
 
 ```bash
-# Work on V1 feature branch
-git checkout feature/v1-sequencer
+# Create feature branch for new work
+git checkout -b feature/your-feature
 
 # Make changes
 python3 build.py
 git add .
-git commit -m "Phase X: description"
-git push origin feature/v1-sequencer
+git commit -m "Description of changes"
+git push origin feature/your-feature
 
-# When V1 complete, merge to main
-git checkout main
-git merge feature/v1-sequencer
-git push origin main  # Deploys to production
+# Create PR and merge to main when ready
 ```
 
 ---
