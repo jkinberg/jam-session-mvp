@@ -10,8 +10,8 @@
 ## Remaining Tasks
 
 ### Pre-Launch
-- [ ] Add survey link to end screen (host and player UIs)
-- [ ] Complete revised GA4 analytics integration
+- [x] Add survey link to end screen (host and player UIs)
+- [x] Complete revised GA4 analytics integration (see ANALYTICS_PLAN.md)
 - [ ] Final mobile testing
 - [ ] Final TV/large screen testing
 - [ ] Merge to main and deploy
@@ -95,8 +95,8 @@
 - [x] Translucent UI for visualizer visibility
 - [x] Master audio bus (compressor, limiter, reverb)
 - [x] Audio mixing improvements
-- [ ] End screen with survey link
-- [ ] GA4 analytics events
+- [x] End screen with survey link
+- [x] GA4 analytics events (V1 revision complete)
 - [x] Update README
 - [x] Update CLAUDE.md
 - [ ] Final user testing

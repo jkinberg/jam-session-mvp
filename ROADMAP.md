@@ -89,8 +89,8 @@ See `TODO.md` for implementation checklist.
 - [x] Audio visualizer (gradient + particles)
 - [x] Master audio bus (compressor, limiter, reverb)
 - [x] Translucent UI for visualizer
-- [ ] **Survey link on end screen**
-- [ ] **GA4 analytics integration**
+- [x] **Survey link on end screen** (host QR + link, player links)
+- [x] **GA4 analytics integration** (V1 revision complete)
 - [ ] Final testing and documentation
 - [ ] Merge to main
 
@@ -100,11 +100,11 @@ See `TODO.md` for implementation checklist.
 
 Before merging V1 to main:
 
-- [ ] Add survey link to end screen (host + all player UIs)
-- [ ] Implement GA4 analytics events for V1 flow
+- [x] Add survey link to end screen (host + all player UIs)
+- [x] Implement GA4 analytics events for V1 flow (see ANALYTICS_PLAN.md)
 - [ ] Test on real phones (iOS Safari, Android Chrome)
 - [ ] Test on TV/large screen
-- [ ] Update all documentation
+- [x] Update all documentation
 - [ ] Create demo video or screenshots
 
 ---

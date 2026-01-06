@@ -185,6 +185,16 @@ git push origin main  # Triggers deployment
 
 For production, use a restricted Ably API key with only Subscribe and Publish capabilities.
 
+### Analytics (Optional)
+
+The app supports Google Analytics 4 for tracking session metrics. To enable:
+
+1. Create a GA4 property at [analytics.google.com](https://analytics.google.com)
+2. Add `GA4_MEASUREMENT_ID=G-XXXXXXXXXX` to your `.env` file
+3. Run `python3 build.py` to regenerate HTML files
+
+Analytics tracks session lifecycle (start, end, completion rate), player joins, and survey engagement. No personal data is collected. See `ANALYTICS_PLAN.md` for details.
+
 ---
 
 ## Customization

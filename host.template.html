@@ -860,7 +860,7 @@
             <h3>How was your experience?</h3>
             <div class="survey-qr" id="surveyQr"></div>
             <br>
-            <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link">Take our quick survey</a>
+            <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link" onclick="trackEvent('survey_clicked', { source: 'host_end_screen', room_code: state.roomCode })">Take our quick survey</a>
         </div>
     </div>
 
@@ -2192,7 +2192,11 @@
             // Start timer
             startTimer();
 
-            trackEvent('session_started', { room_code: state.roomCode });
+            const playerCount = Object.values(state.instruments).filter(i => i.player !== null).length;
+            trackEvent('session_started', {
+                room_code: state.roomCode,
+                player_count: playerCount
+            });
         }
 
         function endSession(endedEarly = false) {

@@ -1,18 +1,25 @@
 # Analytics Integration Plan
 
-**Status:** ✅ **IMPLEMENTED** (December 2024)
+**Status:** Revision for V1 (January 2025)
 
 ---
 
 ## Overview
 
-Add Google Analytics 4 (GA4) to track **product validation metrics** for the Jam Session MVP. Focus on understanding:
+Google Analytics 4 (GA4) tracking for Jam Session V1 (Sequencer). Focus on **product validation metrics** to understand:
 - Are people completing sessions?
 - How many players join per session?
+- Is the lobby flow working?
 - Are there technical issues blocking usage?
 - Are users engaging with the survey?
 
 **Philosophy:** Track product health and validation, not detailed user behavior.
+
+**V1 Architecture Changes from V0:**
+- Lobby system: Open Room → Players Join → Start Session
+- 4 separate instrument files (drums, percussion, bass, chords) instead of single play.html
+- Pattern-based sequencer instead of real-time triggers
+- Late joiner support
 
 ---
 
@@ -20,328 +27,309 @@ Add Google Analytics 4 (GA4) to track **product validation metrics** for the Jam
 
 ### 1. Session Health
 - **Total sessions created** - Overall usage volume
+- **Lobby → Start conversion** - % of rooms that actually start a jam
 - **Session completion rate** - % of sessions that run to completion vs early exit
 - **Average session duration** - How long do sessions actually run?
 - **Sessions with players** - % of sessions where at least 1 player joined
 
 ### 2. Player Engagement
-- **Players per session** - Distribution (0, 1, 2, 3, 4+ players)
+- **Players per session** - Distribution (0, 1, 2, 3, 4 players)
 - **Instrument distribution** - Which instruments are chosen most often?
-- **Time to first player** - How long before someone joins after room creation?
+- **Pattern activity** - Are players actively sending patterns? (chords/bass)
 
 ### 3. Technical Health
 - **Connection failures** - Players who tried but failed to connect
-- **High latency warnings** - Sessions experiencing sync issues
 - **Browser/device distribution** - What platforms are being used?
 - **Errors encountered** - Any JavaScript errors or failures
 
 ### 4. Survey Engagement
-- **Survey link clicks from host** - QR code or button clicks
-- **Survey link clicks from player** - Button clicks on phone end screen
+- **Survey link clicks from host** - QR code or link clicks
+- **Survey link clicks from players** - Button clicks on phone end screen
 - **Survey conversion rate** - Sessions → Survey clicks
 
 ---
 
-## Events to Track
+## V1 Events Specification
 
-### Host Screen Events
+### Host Screen Events (`host.template.html`)
 
-#### Core Session Events
+#### Session Lifecycle Events
+
 ```javascript
-// When host screen loads and generates room code
-gtag('event', 'session_created', {
-  room_code: '[ROOM_CODE]', // For debugging, not PII
-  timestamp: Date.now()
+// Room created (page load, room code generated)
+trackEvent('session_created', {
+  room_code: 'XK7M'
 });
 
-// When "START HOST" button is clicked
-gtag('event', 'session_started', {
-  room_code: '[ROOM_CODE]',
-  player_count: 0 // Initial count
+// Host opens the lobby (clicks "Open Room")
+trackEvent('lobby_opened', {
+  room_code: 'XK7M'
 });
 
-// When session ends (timer expires OR early exit button)
-gtag('event', 'session_ended', {
-  room_code: '[ROOM_CODE]',
+// Session starts (clicks "Start Jam Session")
+trackEvent('session_started', {
+  room_code: 'XK7M',
+  player_count: 3  // Players in lobby at start
+});
+
+// Session ends (timer expires or early exit)
+trackEvent('session_ended', {
+  room_code: 'XK7M',
   completion_type: 'completed' | 'ended_early',
   duration_seconds: 180,
-  total_players: 3,
-  instruments: {
-    drums: 1,
-    bass: 1,
-    chords: 1
-  }
+  total_loops: 24,
+  total_players: 3
 });
 ```
 
-#### Player Join Events
+#### Player Events (tracked on host when receiving messages)
+
 ```javascript
-// When a player successfully joins
-gtag('event', 'player_joined', {
-  room_code: '[ROOM_CODE]',
-  instrument: 'drums' | 'bass' | 'chords',
-  player_count: 1 // New total
+// Player joins the session
+trackEvent('player_joined', {
+  instrument: 'drums' | 'percussion' | 'bass' | 'chords',
+  room_code: 'XK7M'
 });
 ```
 
 #### Survey Events
+
 ```javascript
-// When survey QR code or button is clicked on host
-gtag('event', 'survey_clicked', {
+// Survey link clicked on end screen
+trackEvent('survey_clicked', {
   source: 'host_end_screen',
-  room_code: '[ROOM_CODE]'
+  room_code: 'XK7M'
 });
 ```
 
 #### Error Events
+
 ```javascript
-// When Ably connection fails
-gtag('event', 'connection_error', {
-  error_type: 'ably_connection_failed',
-  error_message: '[ERROR]',
-  screen: 'host'
-});
-```
-
-### Player Screen Events
-
-#### Connection Events
-```javascript
-// When player screen loads successfully
-gtag('event', 'player_loaded', {
-  instrument: 'drums' | 'bass' | 'chords',
-  room_code: '[ROOM_CODE]'
-});
-
-// When player successfully connects to Ably
-gtag('event', 'player_connected', {
-  instrument: 'drums' | 'bass' | 'chords',
-  room_code: '[ROOM_CODE]'
-});
-```
-
-#### Survey Events
-```javascript
-// When survey button is clicked on player end screen
-gtag('event', 'survey_clicked', {
-  source: 'player_end_screen',
-  instrument: 'drums' | 'bass' | 'chords',
-  room_code: '[ROOM_CODE]'
-});
-```
-
-#### Error Events
-```javascript
-// Connection failures
-gtag('event', 'connection_error', {
-  error_type: 'ably_connection_failed',
-  error_message: '[ERROR]',
-  screen: 'player',
-  instrument: 'drums' | 'bass' | 'chords'
+// Ably connection failure
+trackEvent('connection_error', {
+  error: 'ably_failed'
 });
 ```
 
 ---
 
-## Google Analytics 4 Setup
+### Instrument Screen Events
 
-### Step 1: Create GA4 Property
+Each instrument template (drums, percussion, bass, chords) tracks the same events with instrument-specific parameters.
 
-1. Go to https://analytics.google.com
-2. Create a new account (or use existing)
-3. Create a new **GA4 Property** (not Universal Analytics)
-4. Get your **Measurement ID** (format: `G-XXXXXXXXXX`)
-5. No need to set up "enhanced measurement" - we'll track custom events
+#### Connection Events
 
-### Step 2: Add GA4 Script to Templates
+```javascript
+// Page loaded successfully
+trackEvent('player_loaded', {
+  instrument: 'drums' | 'percussion' | 'bass' | 'chords',
+  room_code: 'XK7M'
+});
 
-Add to both `host.template.html` and `play.template.html` in the `<head>` section:
+// Successfully connected to Ably
+trackEvent('player_connected', {
+  instrument: 'drums' | 'percussion' | 'bass' | 'chords',
+  room_code: 'XK7M'
+});
+```
+
+#### Pattern Events (chords and bass only - draft mode instruments)
+
+```javascript
+// Pattern sent to mix (chords)
+trackEvent('pattern_sent', {
+  instrument: 'chords',
+  room_code: 'XK7M',
+  chord_count: 4
+});
+
+// Pattern sent to mix (bass)
+trackEvent('pattern_sent', {
+  instrument: 'bass',
+  room_code: 'XK7M',
+  note_count: 6
+});
+```
+
+Note: Drums and percussion use "live mode" where changes are sent immediately, so we don't track individual pattern sends for those instruments.
+
+#### Survey Events
+
+```javascript
+// Survey link clicked on end screen
+trackEvent('survey_clicked', {
+  source: 'player_end_screen',
+  instrument: 'drums' | 'percussion' | 'bass' | 'chords',
+  room_code: 'XK7M'
+});
+```
+
+#### Error Events
+
+```javascript
+// Ably connection failure
+trackEvent('connection_error', {
+  error: 'ably_failed'
+});
+```
+
+---
+
+## Implementation Status
+
+### Host Screen (`host.template.html`)
+
+| Event | Status | Notes |
+|-------|--------|-------|
+| `session_created` | ✅ Implemented | On room code generation |
+| `lobby_opened` | ✅ Implemented | On "Open Room" click |
+| `session_started` | ✅ Implemented | Includes player_count at start |
+| `session_ended` | ✅ Implemented | Includes completion_type, duration, loops, players |
+| `player_joined` | ✅ Implemented | Tracks instrument type |
+| `survey_clicked` | ✅ Implemented | On survey link click |
+| `connection_error` | ✅ Implemented | Ably failures |
+
+### Drums (`drums.template.html`)
+
+| Event | Status | Notes |
+|-------|--------|-------|
+| `player_loaded` | ✅ Implemented | |
+| `player_connected` | ✅ Implemented | |
+| `survey_clicked` | ✅ Implemented | On survey link click |
+| `connection_error` | ✅ Implemented | |
+
+### Percussion (`percussion.template.html`)
+
+| Event | Status | Notes |
+|-------|--------|-------|
+| `player_loaded` | ✅ Implemented | |
+| `player_connected` | ✅ Implemented | |
+| `survey_clicked` | ✅ Implemented | On survey link click |
+| `connection_error` | ✅ Implemented | |
+
+### Bass (`bass.template.html`)
+
+| Event | Status | Notes |
+|-------|--------|-------|
+| `player_loaded` | ✅ Implemented | |
+| `player_connected` | ✅ Implemented | |
+| `pattern_sent` | ✅ Implemented | Includes note_count |
+| `survey_clicked` | ✅ Implemented | On survey link click |
+| `connection_error` | ✅ Implemented | |
+
+### Chords (`chords.template.html`)
+
+| Event | Status | Notes |
+|-------|--------|-------|
+| `player_loaded` | ✅ Implemented | |
+| `player_connected` | ✅ Implemented | |
+| `pattern_sent` | ✅ Implemented | Includes chord_count |
+| `survey_clicked` | ✅ Implemented | On survey link click |
+| `connection_error` | ✅ Implemented | |
+
+---
+
+## Remaining Implementation Tasks
+
+### Priority 1: Survey Tracking ✅ Complete
+- [x] Add `survey_clicked` event to host end screen link
+- [x] Add `survey_clicked` event to drums end screen link
+- [x] Add `survey_clicked` event to percussion end screen link
+- [x] Add `survey_clicked` event to bass end screen link
+- [x] Add `survey_clicked` event to chords end screen link
+
+### Priority 2: Testing & Validation
+- [ ] Test locally with GA4 DebugView
+- [ ] Verify all events appear in GA4 Realtime report
+- [ ] Test full session flow: create → lobby → start → play → end
+- [ ] Test on mobile devices
+- [ ] Verify room codes and metrics are captured correctly
+
+### Priority 3: GA4 Dashboard Setup
+- [ ] Create custom dimensions for: room_code, instrument, completion_type
+- [ ] Set up Session Health report
+- [ ] Set up Player Engagement report
+- [ ] Set up Survey Conversion report
+
+---
+
+## GA4 Configuration Reference
+
+### Script Setup (already in all templates)
 
 ```html
 <!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
 
-  // Configure with anonymization
-  gtag('config', 'G-XXXXXXXXXX', {
-    'anonymize_ip': true,
-    'allow_google_signals': false,
-    'allow_ad_personalization_signals': false
-  });
+    const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
+    if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+        gtag('js', new Date());
+        gtag('config', GA4_MEASUREMENT_ID, {
+            'anonymize_ip': true,
+            'allow_google_signals': false,
+            'allow_ad_personalization_signals': false
+        });
+    }
+
+    function trackEvent(eventName, params = {}) {
+        if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
+            gtag('event', eventName, params);
+        }
+    }
 </script>
 ```
 
-### Step 3: Store Measurement ID in Environment Variables
+### Environment Variables
 
-Add to `.env`:
 ```bash
+# .env
 GA4_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
-Add to `.env.example`:
-```bash
-# Google Analytics 4 (optional - for analytics tracking)
-GA4_MEASUREMENT_ID=G-XXXXXXXXXX
-```
-
-Add placeholder to templates:
-```html
-<script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
-```
-
-Update `build.py` to replace `__GA4_MEASUREMENT_ID__` placeholder.
-
-### Step 4: Add Privacy Notice (Optional but Recommended)
-
-Add a simple notice to both screens:
-
-```html
-<div style="position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: rgba(255,255,255,0.5);">
-  We use analytics to improve this app. <a href="#" style="color: rgba(255,255,255,0.7);">Learn more</a>
-</div>
-```
-
-Or create a simple modal on first load explaining data collection.
+The `build.py` script replaces `__GA4_MEASUREMENT_ID__` placeholder in all templates.
 
 ---
 
 ## Privacy Configuration
 
-### GA4 Settings to Enable:
-- ✅ **IP Anonymization** - Enabled in config above
-- ✅ **Disable Google Signals** - No cross-device tracking
-- ✅ **Disable Ad Personalization** - No ad targeting
+- ✅ IP Anonymization enabled
+- ✅ Google Signals disabled (no cross-device tracking)
+- ✅ Ad Personalization disabled
 
-### Data Retention Settings:
-- Set data retention to **2 months** (minimum) in GA4 settings
-- This is an MVP - you don't need long-term user data
+**What we track:**
+- Session lifecycle events
+- Instrument choices
+- Technical errors
+- Survey engagement
 
-### What We're NOT Tracking:
-- ❌ User identities (no names, emails)
-- ❌ Personal information
-- ❌ Cross-site activity
-- ❌ Detailed musical behavior (note counts, rhythms, etc.)
-
-### Cookie Consent:
-For MVP testing in the US, you can probably skip cookie consent banners. If you expand to EU users, you'll need:
-- Cookie consent banner
-- Opt-in before tracking
-- Privacy policy page
-
----
-
-## Implementation Checklist
-
-### Setup Phase
-- [x] Create Google Analytics 4 property
-- [x] Get Measurement ID (format: G-XXXXXXXXXX)
-- [x] Add `GA4_MEASUREMENT_ID` to `.env` and Vercel environment variables
-- [x] Add `GA4_MEASUREMENT_ID` to `.env.example` with instructions
-- [x] Update `build.py` to replace `__GA4_MEASUREMENT_ID__` placeholder
-
-### Code Integration - Host Screen
-- [x] Add GA4 script to `host.template.html` `<head>`
-- [x] Track `session_created` on page load
-- [x] Track `session_started` when START HOST clicked
-- [x] Track `player_joined` when receiving join messages
-- [x] Track `session_ended` with completion type and metrics
-- [x] Track `survey_clicked` on survey link clicks
-- [x] Track `connection_error` on Ably failures
-
-### Code Integration - Player Screen
-- [x] Add GA4 script to `play.template.html` `<head>`
-- [x] Track `player_loaded` on page load
-- [x] Track `player_connected` when Ably connects successfully
-- [x] Track `survey_clicked` on survey button clicks
-- [x] Track `connection_error` on failures
-
-### Testing
-- [ ] Test locally with GA4 DebugView (real-time event viewer)
-- [ ] Verify events show up in GA4 dashboard
-- [ ] Test on multiple devices (desktop, mobile)
-- [ ] Verify room codes and metrics are captured correctly
-
-### Documentation
-- [x] Update README with analytics mention
-- [ ] Add analytics toggle instructions (if implementing opt-out)
-- [x] Update CLAUDE.md with analytics event locations
-
----
-
-## GA4 Dashboard Configuration
-
-### Recommended Custom Reports
-
-**1. Session Health Report**
-- Total sessions created
-- Session completion rate
-- Average duration
-- Sessions with players (%)
-
-**2. Player Engagement Report**
-- Total players
-- Players per session (distribution)
-- Instrument distribution (pie chart)
-- Time to first player (average)
-
-**3. Technical Health Report**
-- Connection errors (count)
-- Error rate (% of sessions)
-- Browser/device breakdown
-- Geographic distribution
-
-**4. Survey Conversion Report**
-- Survey clicks from host
-- Survey clicks from players
-- Survey conversion rate (sessions → clicks)
-
-### Custom Dimensions to Create in GA4:
-- `room_code` - String
-- `instrument` - String
-- `completion_type` - String
-- `player_count` - Number
-- `error_type` - String
-
----
-
-## Future Enhancements (Post-MVP)
-
-- [ ] Add A/B testing framework for feature experiments
-- [ ] Track WebRTC latency metrics (when implemented)
-- [ ] Funnel analysis: QR scan → join → play → survey
-- [ ] Cohort analysis: First-time vs returning users
-- [ ] Integration with backend analytics (if adding server)
+**What we DON'T track:**
+- User identities
+- Detailed musical patterns
+- Personal information
 
 ---
 
 ## Expected Insights
 
-After 1-2 weeks of data collection, you should be able to answer:
+After collecting data, we should be able to answer:
 
-1. **Product-Market Fit:**
-   - Are sessions completing? (Target: >70% completion rate)
-   - Are people playing with friends? (Target: >2 players per session)
-
-2. **Technical Validation:**
-   - Is the app working reliably? (Target: <5% error rate)
-   - What devices/browsers are people using?
-
-3. **Survey Effectiveness:**
-   - Are users clicking the survey? (Target: >20% conversion)
-   - Which screen drives more survey engagement? (Host vs Player)
-
-4. **Instrument Popularity:**
-   - Which instruments are most/least popular?
-   - Should we prioritize certain instruments for improvement?
+1. **Lobby Conversion:** What % of rooms that open actually start a jam?
+2. **Completion Rate:** Do sessions run to completion or end early?
+3. **Player Count:** How many players typically join?
+4. **Instrument Popularity:** Which instruments are most/least used?
+5. **Survey Engagement:** Are users clicking the feedback survey?
+6. **Technical Health:** Are there connection errors we need to address?
 
 ---
 
-## Notes
+## V0 Analytics (Archived)
 
-- **Room codes are temporary** - They're not PII, safe to track for debugging
-- **Keep it simple** - This is an MVP, don't over-track
-- **Review after 2 weeks** - See what metrics are actually useful
-- **Consider removing events** that don't provide value
+The original V0 analytics plan tracked events for the single `play.html` template with real-time triggers. V1 replaces this with:
+- Separate instrument templates
+- Lobby system events
+- Pattern-based tracking instead of trigger tracking
+
+V0 templates are archived in `archive/` directory.

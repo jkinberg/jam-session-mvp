@@ -133,6 +133,25 @@ masterCompressor → reverb → masterLimiter → Tone.Destination
 
 Individual instrument volumes are balanced in the synth definitions.
 
+### Analytics (GA4)
+
+All templates include GA4 tracking. See `ANALYTICS_PLAN.md` for full specification.
+
+**Host events:**
+- `session_created` — Room code generated
+- `lobby_opened` — Host clicks "Open Room"
+- `session_started` — Host clicks "Start Jam Session" (includes player_count)
+- `session_ended` — Timer expires or early exit (includes duration, loops, players)
+- `player_joined` — Player connects (includes instrument)
+- `survey_clicked` — Survey link clicked on end screen
+
+**Instrument events:**
+- `player_loaded` — Page loaded
+- `player_connected` — Ably connected
+- `pattern_sent` — Pattern sent to mix (chords/bass only)
+- `survey_clicked` — Survey link clicked on end screen
+- `connection_error` — Ably connection failed
+
 ---
 
 ## Message Protocol (V1)

@@ -453,7 +453,7 @@
         <div class="emoji" style="font-size: 64px; margin-bottom: 20px;">🎉</div>
         <h2>Session Complete!</h2>
         <p>Thanks for jamming!</p>
-        <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link">Share your feedback</a>
+        <a href="https://forms.gle/s597sTaq6xTneg918" target="_blank" class="survey-link" onclick="trackEvent('survey_clicked', { source: 'player_end_screen', instrument: 'chords', room_code: state.roomCode })">Share your feedback</a>
     </div>
 
     <!-- Name Input Modal -->
