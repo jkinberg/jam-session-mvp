@@ -5,14 +5,15 @@
 This document provides strategic prioritization and planning for Jam Session features.
 
 **Last Updated:** January 2025
-**Current Version:** V0 (tagged `v0`)
-**In Development:** V1 Sequencer (`feature/v1-sequencer` branch)
+**Current Version:** V1 Sequencer (in development)
+**Branch:** `feature/v1-sequencer`
+**V0 Tag:** `v0` — Previous real-time trigger-based version
 
 ---
 
 ## Version History
 
-### V0 - Real-Time Triggers (Completed)
+### V0 - Real-Time Triggers (Completed, Tagged)
 - Players tap phone buttons → sounds play on host
 - Real-time triggers with network latency
 - 3 instruments: Drums, Bass, Chords
@@ -25,12 +26,14 @@ This document provides strategic prioritization and planning for Jam Session fea
 - "Recording/playback feature" — want to hear what they made
 - Requests for more sounds, especially Latin percussion
 
-### V1 - Sequencer (In Development)
+### V1 - Sequencer (Current Development)
 - Players build **16-step looping patterns** instead of triggering sounds
 - Phones edit patterns → host plays them in perfect sync
 - 4 instruments: Drums, Percussion, Bass, Chords
 - New **Latin percussion** sounds (cowbell, tambourine, shaker, conga)
 - "Send to Mix" workflow for melodic instruments
+- **Lobby system** for player onboarding before session starts
+- **Audio visualizer** with pulsing gradient and particles
 - All timing handled by host (eliminates latency issues)
 
 **Why the change?** The sequencer approach directly addresses V0 feedback:
@@ -41,66 +44,79 @@ This document provides strategic prioritization and planning for Jam Session fea
 
 ---
 
-## V1 Implementation Roadmap
+## V1 Implementation Status
 
 See `v1-planning/V1_SEQUENCER_SPEC.md` for detailed technical specification.
+See `TODO.md` for implementation checklist.
 
-### Phase 1: Foundation & Infrastructure
-**Status:** Not started
+### Phase 1: Foundation & Infrastructure ✅ Complete
 
 - Archive V0 templates
 - Update build process for multiple instrument files
 - New host screen with 4 instrument rows
 - 16-step playhead animation
-- Tone.js Transport (visual only, no audio)
+- Tone.js Transport
 
-### Phase 2: Drums (Full Vertical Slice)
-**Status:** Not started
+### Phase 2: Drums ✅ Complete
 
 - Drums phone UI (4×4 grid)
 - Live mode pattern editing
 - Host receives/renders/plays drum patterns
-- Validates core architecture
 
-### Phase 3: Percussion
-**Status:** Not started
+### Phase 3: Percussion ✅ Complete
 
-- Latin percussion sounds
+- Latin percussion sounds (cowbell, tambourine, shaker, conga)
 - Same Live mode as drums
 - Multi-instrument handling on host
 
-### Phase 4: Chords (Draft → Send Mode)
-**Status:** Not started
+### Phase 4: Chords ✅ Complete
 
 - 4-slot chord progression picker
 - "Send to Mix" workflow
 - Sustained chord playback
 
-### Phase 5: Bass (Piano Roll)
-**Status:** Not started
+### Phase 5: Bass ✅ Complete
 
 - Piano roll UI for bass notes
 - Variable-length sustained notes
-- Completes all instruments
+- Swipe-to-sustain gesture
 
-### Phase 6: Polish & Launch
-**Status:** Not started
+### Phase 6: Polish & Launch (In Progress)
 
-- Timer, end session, end screen
-- Visual polish
-- Testing and documentation
-- Merge to main
+- [x] Timer, end session button
+- [x] Lobby system (Open Room → Join → Start)
+- [x] Late joiner support
+- [x] Audio visualizer (gradient + particles)
+- [x] Master audio bus (compressor, limiter, reverb)
+- [x] Translucent UI for visualizer
+- [ ] **Survey link on end screen**
+- [ ] **GA4 analytics integration**
+- [ ] Final testing and documentation
+- [ ] Merge to main
+
+---
+
+## Pre-Launch Checklist
+
+Before merging V1 to main:
+
+- [ ] Add survey link to end screen (host + all player UIs)
+- [ ] Implement GA4 analytics events for V1 flow
+- [ ] Test on real phones (iOS Safari, Android Chrome)
+- [ ] Test on TV/large screen
+- [ ] Update all documentation
+- [ ] Create demo video or screenshots
 
 ---
 
 ## Deferred Features (Post-V1)
 
-These features from the V0 roadmap are deferred until V1 is complete and validated:
+These features are deferred until V1 is complete and validated:
 
 ### Maybe for V1.x
+- **Longer chord sustain** — Allow full 16-step sustained chords
 - **Groove meter & feedback** — May reintroduce in sequencer context
-- **Sound quality upgrades** — Master effects chain
-- **Host screen visuals** — Particle effects, animations
+- **Sound quality upgrades** — Enhanced synth presets
 
 ### Longer Term
 - **WebRTC migration** — Less critical now that patterns (not triggers) are sent
@@ -116,7 +132,15 @@ These features from the V0 roadmap are deferred until V1 is complete and validat
 
 ## Decision Log
 
-### January 2025
+### January 2025 (V1 Development)
+- Implemented lobby system for better player onboarding
+- Added audio visualizer with particles for visual engagement
+- Added master audio bus with compressor, limiter, reverb
+- Made UI translucent to show visualizer through instrument rows
+- Fixed late joiner support (players can join mid-session)
+- Fixed bass/chord sustain release on session end
+
+### January 2025 (V1 Start)
 - Tagged V0 release before starting V1 work
 - Created `feature/v1-sequencer` branch
 - Decided to pivot to sequencer approach based on user feedback

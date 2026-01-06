@@ -8,12 +8,24 @@ This file provides context for Claude Code, Cursor, and other AI coding assistan
 
 **Jam Session** is a multiplayer music party game. Players join via phones, build looping patterns on virtual instruments, and all audio plays on a shared TV screen.
 
-**Current Status:** Developing V1 (Sequencer) on `feature/v1-sequencer` branch
+**Current Status:** V1 (Sequencer) ready for final testing on `feature/v1-sequencer` branch
 **V0 Tag:** `v0` — Previous real-time trigger-based version
 
 **Key constraint**: This is intentionally minimal. Resist the urge to add complexity, frameworks, or dependencies unless specifically requested.
 
 **V1 Spec:** See `v1-planning/V1_SEQUENCER_SPEC.md` for complete technical specification.
+
+---
+
+## V1 Key Features
+
+- **Lobby System**: Host opens room → players scan QR codes → "Start Jam Session" begins
+- **16-Step Sequencer**: Players build looping patterns, host plays in perfect sync
+- **4 Instruments**: Drums, Percussion (Latin), Bass (piano roll), Chords (4-slot picker)
+- **Audio Visualizer**: Full-screen pulsing gradient with particle system
+- **Master Audio Bus**: Compressor, limiter, reverb for polished sound
+- **Late Joiner Support**: Players can join mid-session
+- **Translucent UI**: Instrument rows show visualizer through
 
 ---
 
@@ -52,7 +64,7 @@ HOST (TV/laptop)                    PHONES (controllers)
 
 | File | Purpose | Edit for... |
 |------|---------|-------------|
-| `host.template.html` | Host screen with 4 instrument rows | Sequencer display, playhead, row rendering |
+| `host.template.html` | Host screen with lobby, sequencer, visualizer | Lobby flow, audio, visuals |
 | `drums.template.html` | Drums phone UI | 4×4 grid, sound selector, live mode |
 | `percussion.template.html` | Percussion phone UI | Latin sounds, same pattern as drums |
 | `chords.template.html` | Chords phone UI | 4-slot picker, Send to Mix |
@@ -61,6 +73,8 @@ HOST (TV/laptop)                    PHONES (controllers)
 | `v1-planning/V1_SEQUENCER_SPEC.md` | V1 technical spec | Architecture reference |
 | `TODO.md` | Task tracking | Implementation progress |
 | `ROADMAP.md` | Product roadmap | Strategic planning |
+| `ANALYTICS_PLAN.md` | GA4 analytics plan | Event tracking reference |
+| `GROOVE_FEEDBACK_PLAN.md` | Future feedback system | Reference for gamification |
 | `archive/` | V0 templates | Reference only |
 
 ---
@@ -97,6 +111,27 @@ const SESSION_DURATION = 180; // Seconds
 **Draft → Send Mode (Chords, Bass):**
 - Edits are local until "Send to Mix" pressed
 - Allows building complete patterns before committing
+
+### Session Flow
+
+1. **Welcome Screen** → Host clicks "Open Room"
+2. **Lobby** → Room code + QR codes shown, players join on phones
+3. **Ready** → Players enter names, appear in lobby list
+4. **Start** → Host clicks "Start Jam Session"
+5. **Playing** → 3-minute timer, visualizer active, patterns play
+6. **End** → Timer expires or host clicks "End Session" → End screen
+
+**Late Joiners:** If a player scans QR after session starts, they can still join.
+
+### Audio Mixing
+
+Host uses a master audio bus:
+```javascript
+// Signal chain: synths → compressor → reverb → limiter → destination
+masterCompressor → reverb → masterLimiter → Tone.Destination
+```
+
+Individual instrument volumes are balanced in the synth definitions.
 
 ---
 
@@ -198,7 +233,11 @@ http://localhost:8000/bass.html?room=XXXX
 ```
 
 Replace `XXXX` with room code shown on host screen.
-Replace `localhost` with your computer's IP for phone testing.
+
+**Testing on phones (localhost):**
+1. When on localhost, the lobby shows an IP override field
+2. Enter your computer's local IP (e.g., 192.168.1.100)
+3. QR codes will update with the correct URL for phone access
 
 **Important:** After editing template files, run `python3 build.py` to regenerate.
 

@@ -1,82 +1,104 @@
 # TODO - Jam Session
 
-## Current Focus: V1 Sequencer
+## Current Focus: V1 Polish & Launch
 
 **Branch:** `feature/v1-sequencer`
 **Spec:** `v1-planning/V1_SEQUENCER_SPEC.md`
 
 ---
 
-## V1 Implementation Checklist
+## Remaining Tasks
 
-### Phase 1: Foundation & Infrastructure
-- [ ] Archive V0 templates to `archive/` directory
-- [ ] Update `build.py` to generate multiple HTML files
-- [ ] Create new `host.template.html`:
-  - [ ] 4 instrument rows (drums, percussion, bass, chords)
-  - [ ] QR codes with instrument-specific URLs
-  - [ ] 16-step grid visualization per row
-  - [ ] Playhead animation at 120 BPM
-  - [ ] Timer display, room code, beat indicator
-- [ ] Ably connection setup
-- [ ] Session state structure for patterns
-- [ ] Row states (greyed out vs. active)
-- [ ] Tone.js Transport running (no audio yet)
+### Pre-Launch
+- [ ] Add survey link to end screen (host and player UIs)
+- [ ] Complete revised GA4 analytics integration
+- [ ] Final mobile testing
+- [ ] Final TV/large screen testing
+- [ ] Merge to main and deploy
 
-### Phase 2: Drums
-- [ ] Create `drums.template.html`:
-  - [ ] Sound selector (Kick, Snare, HiHat, Clap)
-  - [ ] 4×4 step grid
-  - [ ] Tap to place/remove/replace sounds
-  - [ ] Clear All button
-  - [ ] Beat indicator
-- [ ] Live mode: changes sent immediately
-- [ ] Host receives/stores drum patterns
-- [ ] Host renders drum pattern in grid
-- [ ] Host plays drum sounds on steps
-- [ ] Row flash animation on update
-- [ ] Player name display
-- [ ] Player disconnect handling
+### Future Improvements
+- [ ] Longer chord sustain option (full 16-step sustain)
+- [ ] Groove meter & feedback system
+- [ ] Session recording/playback
+- [ ] Additional instruments
 
-### Phase 3: Percussion
-- [ ] Create `percussion.template.html` (same UI as drums)
-- [ ] Tone.js synths: Cowbell, Tambourine, Shaker, Conga
-- [ ] Host handles multiple instruments
-- [ ] Verify audio mixing
+---
 
-### Phase 4: Chords
-- [ ] Create `chords.template.html`:
-  - [ ] 4 chord slots (beats 1-4, 5-8, 9-12, 13-16)
-  - [ ] Tap to cycle: Am → F → C → G → Am...
-  - [ ] "Send to Mix" button
-  - [ ] "In mix:" display
-  - [ ] Beat indicator
-- [ ] Draft vs. sent state
-- [ ] Host receives chord progressions
-- [ ] Host renders sustained chords
-- [ ] Host plays chords with sustain/release
+## V1 Implementation Status
 
-### Phase 5: Bass
-- [ ] Create `bass.template.html`:
-  - [ ] Two 8-column panels (steps 1-8, 9-16)
-  - [ ] 6 rows: A, G, F, E, D, C
-  - [ ] Tap to create/delete notes
-  - [ ] Clear button
-  - [ ] "Send to Mix" button
-- [ ] Host receives bass patterns with durations
-- [ ] Host renders variable-length notes
-- [ ] Host plays bass with sustain/release
+### Phase 1: Foundation & Infrastructure ✅
+- [x] Archive V0 templates to `archive/` directory
+- [x] Update `build.py` to generate multiple HTML files
+- [x] Create new `host.template.html`:
+  - [x] 4 instrument rows (drums, percussion, bass, chords)
+  - [x] QR codes with instrument-specific URLs
+  - [x] 16-step grid visualization per row
+  - [x] Playhead animation at 120 BPM
+  - [x] Timer display, room code, beat indicator
+- [x] Ably connection setup
+- [x] Session state structure for patterns
+- [x] Row states (greyed out vs. active)
+- [x] Tone.js Transport running
 
-### Phase 6: Polish & Launch
-- [ ] Timer countdown (3:00 → 0:00)
-- [ ] "End Session" button
+### Phase 2: Drums ✅
+- [x] Create `drums.template.html`:
+  - [x] Sound selector (Kick, Snare, HiHat, Clap)
+  - [x] 4×4 step grid
+  - [x] Tap to place/remove/replace sounds
+  - [x] Clear All button
+  - [x] Beat indicator
+- [x] Live mode: changes sent immediately
+- [x] Host receives/stores drum patterns
+- [x] Host renders drum pattern in grid
+- [x] Host plays drum sounds on steps
+- [x] Row flash animation on update
+- [x] Player name display
+- [x] Player disconnect handling
+
+### Phase 3: Percussion ✅
+- [x] Create `percussion.template.html` (same UI as drums)
+- [x] Tone.js synths: Cowbell, Tambourine, Shaker, Conga Hi/Lo
+- [x] Host handles multiple instruments
+- [x] Audio mixing verified
+
+### Phase 4: Chords ✅
+- [x] Create `chords.template.html`:
+  - [x] 4 chord slots (beats 1-4, 5-8, 9-12, 13-16)
+  - [x] Tap to cycle: Am → F → C → G → Em → Dm
+  - [x] "Send to Mix" button
+  - [x] "In mix:" display
+  - [x] Beat indicator
+- [x] Draft vs. sent state
+- [x] Host receives chord progressions
+- [x] Host renders sustained chords
+- [x] Host plays chords with sustain/release
+
+### Phase 5: Bass ✅
+- [x] Create `bass.template.html`:
+  - [x] Two 8-column panels (steps 1-8, 9-16)
+  - [x] 6 rows: A, G, F, E, D, C
+  - [x] Tap to create/delete notes
+  - [x] Swipe to create sustains
+  - [x] Clear button
+  - [x] "Send to Mix" button
+- [x] Host receives bass patterns with durations
+- [x] Host renders variable-length notes
+- [x] Host plays bass with sustain/release
+
+### Phase 6: Polish & Launch (In Progress)
+- [x] Timer countdown (3:00 → 0:00)
+- [x] "End Session" button
+- [x] Lobby system (Open Room → Players Join → Start Session)
+- [x] IP address override for localhost testing
+- [x] Late joiner support (join mid-session)
+- [x] Audio visualizer (pulsing gradient + particles)
+- [x] Translucent UI for visualizer visibility
+- [x] Master audio bus (compressor, limiter, reverb)
+- [x] Audio mixing improvements
 - [ ] End screen with survey link
-- [ ] Visual polish (colors, animations, effects)
-- [ ] Mobile testing
-- [ ] TV/large screen testing
-- [ ] Analytics events (GA4)
-- [ ] Update README
-- [ ] Update CLAUDE.md
+- [ ] GA4 analytics events
+- [x] Update README
+- [x] Update CLAUDE.md
 - [ ] Final user testing
 - [ ] Merge to main
 
@@ -109,24 +131,8 @@ The following was completed in V0 (tagged `v0`):
 
 ---
 
-## Deferred (Post-V1)
-
-These items are from V0 planning and may be revisited after V1:
-
-- [ ] Groove meter & feedback system
-- [ ] Master effects chain (reverb, compressor, limiter)
-- [ ] WebRTC migration (less critical for pattern-based approach)
-- [ ] Session recording/playback
-- [ ] Challenge/tutorial mode
-- [ ] Additional instruments (melody synth, FX controller)
-- [ ] Tempo adjustment control
-- [ ] Social sharing image
-
----
-
 ## Notes
 
 - V1 is a significant rewrite; V0 code is archived for reference
-- Each phase should be committed and pushed before moving to next
 - Test on real phones during development, not just browser resize
-- Prioritize "does it work" over "is it pretty" in early phases
+- Focus on "does it work" over "is it pretty" in early phases

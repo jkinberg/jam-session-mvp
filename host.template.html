@@ -7,26 +7,23 @@
 
     <!-- Primary Meta Tags -->
     <meta name="title" content="Jam Session - Multiplayer Music Party Game">
-    <meta name="description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
+    <meta name="description" content="Build beats together! A collaborative 16-step sequencer where everyone contributes to the loop.">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jam-mvp-xi.vercel.app/">
     <meta property="og:title" content="Jam Session - Multiplayer Music Party Game">
-    <meta property="og:description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
-    <!-- TODO: Add og:image once social-share.png is created -->
-    <!-- <meta property="og:image" content="https://jam-mvp-xi.vercel.app/social-share.png"> -->
+    <meta property="og:description" content="Build beats together! A collaborative 16-step sequencer where everyone contributes to the loop.">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://jam-mvp-xi.vercel.app/">
     <meta property="twitter:title" content="Jam Session - Multiplayer Music Party Game">
-    <meta property="twitter:description" content="Turn your phones into instruments! Play drums, bass, and chords together in this free multiplayer music jam session. Perfect for parties.">
-    <!-- TODO: Add twitter:image once social-share.png is created -->
-    <!-- <meta property="twitter:image" content="https://jam-mvp-xi.vercel.app/social-share.png"> -->
+    <meta property="twitter:description" content="Build beats together! A collaborative 16-step sequencer where everyone contributes to the loop.">
 
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=__GA4_MEASUREMENT_ID__"></script>
@@ -34,7 +31,6 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
 
-        // Only initialize GA4 if measurement ID is set
         const GA4_MEASUREMENT_ID = '__GA4_MEASUREMENT_ID__';
         if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
             gtag('js', new Date());
@@ -45,7 +41,6 @@
             });
         }
 
-        // Analytics helper function
         function trackEvent(eventName, params = {}) {
             if (GA4_MEASUREMENT_ID && !GA4_MEASUREMENT_ID.startsWith('__')) {
                 gtag('event', eventName, params);
@@ -59,7 +54,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
@@ -67,15 +62,14 @@
             min-height: 100vh;
             overflow: hidden;
         }
-        
+
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 15px;
+            padding: 20px;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         /* Header */
@@ -83,359 +77,361 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-        }
-        
-        .room-code {
-            background: rgba(255,255,255,0.1);
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-size: 18px;
-        }
-        
-        .room-code span {
-            font-weight: bold;
-            color: #00d4ff;
-            font-family: monospace;
-            font-size: 24px;
-            letter-spacing: 4px;
-        }
-        
-        .timer {
-            background: rgba(255,255,255,0.1);
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-size: 32px;
-            font-family: monospace;
-            font-weight: bold;
-        }
-        
-        .timer.warning {
-            color: #ff6b6b;
-            animation: pulse 1s infinite;
+            margin-bottom: 20px;
         }
 
-        .end-session-btn {
-            background: rgba(239, 68, 68, 0.2);
-            border: 2px solid rgba(239, 68, 68, 0.5);
-            color: #ff6b6b;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .end-session-btn:hover {
-            background: rgba(239, 68, 68, 0.3);
-            border-color: #ff6b6b;
-        }
-
-        .end-session-btn.hidden {
-            display: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* Beat indicator */
-        .beat-section {
-            text-align: center;
-            padding: 15px 0;
-        }
-        
-        .beat-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .beat-dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            transition: all 0.1s ease;
-        }
-        
-        .beat-dot.active {
-            background: #00d4ff;
-            box-shadow: 0 0 30px #00d4ff;
-            transform: scale(1.3);
-        }
-        
-        .bpm {
-            color: rgba(255,255,255,0.5);
-            font-size: 14px;
-        }
-        
-        /* Visualizer */
-        .visualizer {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
-        .pulse-ring {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.2);
-            position: absolute;
-            transition: all 0.1s ease;
-        }
-
-        .pulse-ring.active {
-            transform: scale(1.5);
-            opacity: 0;
-        }
-
-        .center-circle {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.5);
-            transition: all 0.1s ease;
-        }
-        
-        .center-circle.pulse {
-            transform: scale(1.1);
-            box-shadow: 0 0 100px rgba(102, 126, 234, 0.8);
-        }
-        
-        /* Activity indicators */
-        .activity-flash {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.1s;
-        }
-        
-        .activity-flash.drums {
-            background: radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%);
-        }
-        
-        .activity-flash.bass {
-            background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%);
-        }
-        
-        .activity-flash.chords {
-            background: radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%);
-        }
-        
-        .activity-flash.active {
-            opacity: 1;
-        }
-        
-        /* Instruments panel */
-        .instruments {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 15px 0;
-        }
-
-        .instrument-card {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 12px 20px;
-            text-align: center;
-            min-width: 140px;
-            transition: all 0.3s ease;
-        }
-        
-        .instrument-card.connected {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-        
-        .instrument-card .emoji {
+        .header-left h1 {
             font-size: 28px;
-            margin-bottom: 6px;
-        }
-
-        .instrument-card .name {
-            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 4px;
+            letter-spacing: -1px;
         }
 
-        .instrument-card .status {
-            font-size: 12px;
-            color: rgba(255,255,255,0.5);
-        }
-        
-        .instrument-card.connected .status {
-            color: #10b981;
-        }
-        
-        .instrument-card .activity-bar {
-            display: flex;
-            justify-content: center;
-            gap: 2px;
-            margin-top: 6px;
-            height: 15px;
-        }
-        
-        .instrument-card .activity-bar .bar {
-            width: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
-            transition: height 0.1s;
-        }
-        
-        .instrument-card.connected .activity-bar .bar {
-            background: #10b981;
-        }
-        
-        /* Join URLs */
-        .join-section {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 10px;
-            margin-top: auto;
+        .room-code {
+            color: #888;
+            font-size: 14px;
+            margin-top: 4px;
         }
 
-        .join-section h3 {
-            margin-bottom: 8px;
-            color: rgba(255,255,255,0.7);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .join-urls {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+        .room-code span {
+            font-family: monospace;
+            color: #00d4ff;
+            font-size: 18px;
+            font-weight: bold;
         }
 
-        .join-url {
+        .header-right {
+            text-align: right;
+        }
+
+        .timer {
+            font-size: 48px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .timer-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Instrument Rows */
+        .instruments {
             flex: 1;
-            min-width: 140px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 8px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
+            gap: 12px;
+            overflow: hidden;
         }
 
-        .join-url .label {
+        .instrument-row {
             display: flex;
             align-items: center;
-            gap: 4px;
-            margin-bottom: 6px;
-            font-weight: bold;
-            font-size: 12px;
+            gap: 16px;
+            background: rgba(30, 30, 50, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
         }
 
-        .join-url .qr-code {
-            background: white;
-            padding: 6px;
-            border-radius: 6px;
-            margin-bottom: 6px;
+        .instrument-row.inactive {
+            background: rgba(30, 30, 50, 0.4);
+            opacity: 0.6;
         }
 
-        .join-url .qr-code img {
-            display: block;
+        .instrument-row.flash {
+            box-shadow: 0 0 30px var(--instrument-color);
+        }
+
+        /* QR Code */
+        .qr-container {
             width: 80px;
             height: 80px;
+            background: white;
+            border-radius: 8px;
+            padding: 4px;
+            flex-shrink: 0;
         }
 
-        .ip-config {
-            background: rgba(255,165,0,0.1);
-            border: 1px solid rgba(255,165,0,0.3);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
+        .qr-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Instrument Info */
+        .instrument-info {
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .instrument-name {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .instrument-name .emoji {
+            font-size: 24px;
+        }
+
+        .player-name {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-top: 4px;
+        }
+
+        .player-name.waiting {
+            color: rgba(255,255,255,0.4);
+            font-style: italic;
+        }
+
+        /* Sequence Grid */
+        .sequence-grid {
+            flex: 1;
+            display: flex;
+            gap: 3px;
+        }
+
+        .step {
+            flex: 1;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 12px;
+            font-weight: bold;
+            color: rgba(255,255,255,0.3);
+            transition: all 0.1s ease;
+            position: relative;
+        }
+
+        .step.beat-marker {
+            margin-left: 6px;
+        }
+
+        .step.active {
+            background: var(--instrument-color-light);
+            color: var(--instrument-color);
+        }
+
+        .step.playing {
+            background: var(--instrument-color);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--instrument-color);
+        }
+
+        /* Sustained notes (bass/chords) */
+        .step.sustain-start {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .step.sustain-middle {
+            border-radius: 0;
+            margin-left: -1px;
+        }
+
+        .step.sustain-end {
+            border-radius: 0 6px 6px 0;
+            margin-left: -1px;
+        }
+
+        /* Footer Controls */
+        .footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .beat-indicator {
+            display: flex;
+            gap: 8px;
+        }
+
+        .beat-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #444;
+            transition: all 0.1s ease;
+        }
+
+        .beat-dot.active {
+            background: #00d4ff;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+
+        .bpm-display {
+            font-size: 24px;
+            font-family: monospace;
+        }
+
+        .bpm-display .label {
+            color: #888;
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-start {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #16a34a;
+            transform: scale(1.05);
+        }
+
+        .btn-end {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-end:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            text-align: center;
+            margin-top: 12px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Audio Visualizer - Full screen background */
+        .visualizer-background {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .visualizer-background canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Ensure content is above visualizer */
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* IP Config for localhost testing */
+        .ip-config {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 12px 20px;
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 10px;
+        }
+
+        .ip-config span {
+            color: #fbbf24;
+            font-size: 14px;
         }
 
         .ip-config input {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background: #1a1a2e;
             color: white;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: monospace;
+            font-size: 14px;
+            width: 160px;
+        }
+
+        .ip-config input:focus {
+            outline: none;
+            border-color: #00d4ff;
         }
 
         .ip-config button {
-            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
             border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
+            border-radius: 6px;
+            background: #fbbf24;
+            color: #1a1a2e;
             font-weight: bold;
+            cursor: pointer;
         }
 
         .ip-config button:hover {
-            background: rgba(255,255,255,0.3);
+            background: #f59e0b;
         }
 
-        .join-url .url {
-            font-family: monospace;
-            font-size: 8px;
-            color: #00d4ff;
-            word-break: break-all;
-            opacity: 0.6;
-            line-height: 1.2;
-        }
-        
         /* Start overlay */
         .start-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
         }
-        
+
         .start-overlay.hidden {
             display: none;
         }
-        
+
         .start-overlay h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 64px;
+            margin-bottom: 10px;
             background: linear-gradient(135deg, #00d4ff, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
+
         .start-overlay p {
             color: rgba(255,255,255,0.6);
+            font-size: 18px;
             margin-bottom: 40px;
         }
-        
-        .start-btn {
+
+        .start-overlay .start-btn {
             background: linear-gradient(135deg, #00d4ff, #764ba2);
             border: none;
             color: white;
@@ -446,13 +442,210 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        
-        .start-btn:hover {
+
+        .start-overlay .start-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 40px rgba(0, 212, 255, 0.4);
         }
-        
-        /* Session end overlay */
+
+        /* Lobby phase within start overlay */
+        .lobby-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .lobby-content.active {
+            display: flex;
+        }
+
+        .welcome-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .welcome-content.hidden {
+            display: none;
+        }
+
+        .lobby-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lobby-header h1 {
+            font-size: 48px;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #00d4ff, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lobby-header .room-code-large {
+            font-size: 36px;
+            font-family: monospace;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .lobby-header .subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 16px;
+        }
+
+        .lobby-qr-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .lobby-qr-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .lobby-qr-item canvas {
+            width: 100px !important;
+            height: 100px !important;
+            margin-bottom: 10px;
+        }
+
+        .lobby-qr-item .instrument-label {
+            font-size: 14px;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .lobby-qr-item .player-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .lobby-qr-item .player-status.joined {
+            color: #22c55e;
+        }
+
+        .lobby-players {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .lobby-player {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lobby-player .emoji {
+            font-size: 20px;
+        }
+
+        .lobby-player .name {
+            color: white;
+            font-weight: 500;
+        }
+
+        .lobby-start-btn {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            color: white;
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .lobby-start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .lobby-start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .lobby-waiting {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        /* Lobby IP Config */
+        .lobby-ip-config {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 12px;
+        }
+
+        .lobby-ip-config span {
+            color: #fbbf24;
+            font-size: 14px;
+        }
+
+        .lobby-ip-config .ip-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lobby-ip-config input {
+            padding: 10px 14px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: white;
+            font-size: 16px;
+            width: 180px;
+        }
+
+        .lobby-ip-config input:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .lobby-ip-config button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #fbbf24;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .lobby-ip-config button:hover {
+            background: #f59e0b;
+        }
+
+        /* End overlay */
         .end-overlay {
             position: fixed;
             inset: 0;
@@ -463,41 +656,42 @@
             justify-content: center;
             z-index: 100;
         }
-        
+
         .end-overlay.hidden {
             display: none;
         }
-        
+
         .end-overlay h1 {
             font-size: 48px;
             margin-bottom: 30px;
         }
-        
+
         .end-overlay .stats {
             display: flex;
-            gap: 40px;
+            gap: 60px;
             margin-bottom: 40px;
         }
-        
+
         .end-overlay .stat {
             text-align: center;
         }
-        
+
         .end-overlay .stat .value {
             font-size: 48px;
             font-weight: bold;
             color: #00d4ff;
         }
-        
+
         .end-overlay .stat .label {
             color: rgba(255,255,255,0.6);
+            font-size: 14px;
         }
-        
+
         .end-overlay .buttons {
             display: flex;
             gap: 20px;
         }
-        
+
         .end-overlay button {
             padding: 15px 40px;
             font-size: 18px;
@@ -505,489 +699,999 @@
             border: none;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.2s;
         }
-        
+
+        .end-overlay button:hover {
+            transform: scale(1.05);
+        }
+
         .end-overlay .play-again {
             background: linear-gradient(135deg, #00d4ff, #764ba2);
             color: white;
         }
-        
+
         .end-overlay .new-room {
             background: rgba(255,255,255,0.1);
             color: white;
         }
+
+        /* Instrument colors */
+        .instrument-row[data-instrument="drums"] {
+            --instrument-color: #ef4444;
+            --instrument-color-light: #fee2e2;
+            border-left: 4px solid #ef4444;
+        }
+
+        .instrument-row[data-instrument="percussion"] {
+            --instrument-color: #f59e0b;
+            --instrument-color-light: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .instrument-row[data-instrument="bass"] {
+            --instrument-color: #8b5cf6;
+            --instrument-color-light: #ede9fe;
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .instrument-row[data-instrument="chords"] {
+            --instrument-color: #06b6d4;
+            --instrument-color-light: #cffafe;
+            border-left: 4px solid #06b6d4;
+        }
+
+        .instrument-row.inactive {
+            border-left-color: #ccc;
+        }
     </style>
 </head>
 <body>
+    <!-- Audio Visualizer Background -->
+    <div class="visualizer-background" id="visualizerBg">
+        <canvas id="visualizer"></canvas>
+    </div>
+
     <!-- Start overlay -->
     <div class="start-overlay" id="startOverlay">
-        <h1>🎵 JAM SESSION</h1>
-        <p>Multiplayer music experience</p>
-        <button class="start-btn" id="startBtn">START HOST</button>
+        <!-- Welcome view (initial) -->
+        <div class="welcome-content" id="welcomeContent">
+            <h1>JAM SESSION</h1>
+            <p>Build beats together with your friends</p>
+            <button class="start-btn" id="openRoomBtn">OPEN ROOM</button>
+        </div>
+
+        <!-- Lobby view (after opening room) -->
+        <div class="lobby-content" id="lobbyContent">
+            <div class="lobby-header">
+                <h1>JAM SESSION</h1>
+                <div class="room-code-large" id="lobbyRoomCode">----</div>
+                <div class="subtitle">Scan a QR code to join</div>
+            </div>
+
+            <!-- IP Config for localhost testing -->
+            <div class="lobby-ip-config" id="lobbyIpConfig">
+                <span>⚠️ Using localhost - Enter your IP for QR codes:</span>
+                <div class="ip-input-row">
+                    <input type="text" id="lobbyHostIpInput" placeholder="e.g. 192.168.1.100">
+                    <button id="lobbyUpdateIpBtn">Update</button>
+                </div>
+            </div>
+
+            <div class="lobby-qr-grid" id="lobbyQrGrid">
+                <div class="lobby-qr-item" data-instrument="drums">
+                    <div id="lobby-qr-drums"></div>
+                    <div class="instrument-label">🥁 Drums</div>
+                    <div class="player-status" id="lobby-status-drums">Waiting...</div>
+                </div>
+                <div class="lobby-qr-item" data-instrument="percussion">
+                    <div id="lobby-qr-percussion"></div>
+                    <div class="instrument-label">🎵 Percussion</div>
+                    <div class="player-status" id="lobby-status-percussion">Waiting...</div>
+                </div>
+                <div class="lobby-qr-item" data-instrument="bass">
+                    <div id="lobby-qr-bass"></div>
+                    <div class="instrument-label">🎸 Bass</div>
+                    <div class="player-status" id="lobby-status-bass">Waiting...</div>
+                </div>
+                <div class="lobby-qr-item" data-instrument="chords">
+                    <div id="lobby-qr-chords"></div>
+                    <div class="instrument-label">🎹 Chords</div>
+                    <div class="player-status" id="lobby-status-chords">Waiting...</div>
+                </div>
+            </div>
+
+            <button class="lobby-start-btn" id="startJamBtn">START JAM SESSION</button>
+            <div class="lobby-waiting" id="lobbyWaiting">Players can still join after starting</div>
+        </div>
     </div>
-    
+
     <!-- End overlay -->
     <div class="end-overlay hidden" id="endOverlay">
-        <h1>🎉 Session Complete!</h1>
+        <h1>Session Complete!</h1>
         <div class="stats">
             <div class="stat">
-                <div class="value" id="statNotes">0</div>
-                <div class="label">Notes Played</div>
+                <div class="value" id="statLoops">0</div>
+                <div class="label">Loops Played</div>
             </div>
             <div class="stat">
                 <div class="value" id="statPlayers">0</div>
                 <div class="label">Players</div>
             </div>
         </div>
-
-        <!-- Survey Section with QR Code -->
-        <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin: 20px 0;">
-            <div style="color: #00d4ff; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
-                📋 Help us improve!
-            </div>
-            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 12px;">
-                Scan QR code or click link to share feedback (takes 3 min)
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                <div style="background: white; padding: 8px; border-radius: 8px;">
-                    <img id="surveyQR" style="width: 100px; height: 100px;" alt="Survey QR Code">
-                </div>
-                <a href="https://forms.gle/3KSkcUiae2DvfePr9" target="_blank" id="hostSurveyLink" style="
-                    display: inline-block;
-                    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-                    color: white;
-                    padding: 12px 20px;
-                    border-radius: 8px;
-                    text-decoration: none;
-                    font-weight: bold;
-                    font-size: 14px;
-                    transition: transform 0.2s;
-                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    📝 Take Survey
-                </a>
-            </div>
-        </div>
-
         <div class="buttons">
             <button class="play-again" id="playAgainBtn">Play Again</button>
             <button class="new-room" id="newRoomBtn">New Room</button>
         </div>
     </div>
-    
-    <!-- Main content -->
+
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <div class="room-code">
-                Room: <span id="roomCode">----</span>
+            <div class="header-left">
+                <h1>JAM SESSION</h1>
+                <div class="room-code">Room: <span id="roomCode">----</span></div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="header-right">
                 <div class="timer" id="timer">3:00</div>
-                <button class="end-session-btn hidden" id="endSessionBtn">End Session</button>
+                <div class="timer-label">remaining</div>
             </div>
         </div>
-        
-        <div class="beat-section">
-            <div class="beat-indicator">
-                <div class="beat-dot" data-beat="0"></div>
-                <div class="beat-dot" data-beat="1"></div>
-                <div class="beat-dot" data-beat="2"></div>
-                <div class="beat-dot" data-beat="3"></div>
-            </div>
-            <div class="bpm">120 BPM</div>
-        </div>
-        
-        <div class="visualizer">
-            <div class="activity-flash drums"></div>
-            <div class="activity-flash bass"></div>
-            <div class="activity-flash chords"></div>
-            <div class="pulse-ring"></div>
-            <div class="center-circle">🎵</div>
-        </div>
-        
+
+        <!-- Instrument Rows -->
         <div class="instruments">
-            <div class="instrument-card" id="card-drums">
-                <div class="emoji">🥁</div>
-                <div class="name">Drums</div>
-                <div class="status">Waiting...</div>
-                <div class="activity-bar">
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
+            <!-- Drums -->
+            <div class="instrument-row inactive" data-instrument="drums" id="row-drums">
+                <div class="qr-container" id="qr-drums"></div>
+                <div class="instrument-info">
+                    <div class="instrument-name">
+                        <span class="emoji">🥁</span>
+                        <span>Drums</span>
+                    </div>
+                    <div class="player-name waiting" id="player-drums">Scan to join</div>
                 </div>
+                <div class="sequence-grid" id="grid-drums"></div>
             </div>
-            <div class="instrument-card" id="card-bass">
-                <div class="emoji">🎸</div>
-                <div class="name">Bass</div>
-                <div class="status">Waiting...</div>
-                <div class="activity-bar">
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
+
+            <!-- Percussion -->
+            <div class="instrument-row inactive" data-instrument="percussion" id="row-percussion">
+                <div class="qr-container" id="qr-percussion"></div>
+                <div class="instrument-info">
+                    <div class="instrument-name">
+                        <span class="emoji">🎵</span>
+                        <span>Percussion</span>
+                    </div>
+                    <div class="player-name waiting" id="player-percussion">Scan to join</div>
                 </div>
+                <div class="sequence-grid" id="grid-percussion"></div>
             </div>
-            <div class="instrument-card" id="card-chords">
-                <div class="emoji">🎹</div>
-                <div class="name">Chords</div>
-                <div class="status">Waiting...</div>
-                <div class="activity-bar">
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
+
+            <!-- Bass -->
+            <div class="instrument-row inactive" data-instrument="bass" id="row-bass">
+                <div class="qr-container" id="qr-bass"></div>
+                <div class="instrument-info">
+                    <div class="instrument-name">
+                        <span class="emoji">🎸</span>
+                        <span>Bass</span>
+                    </div>
+                    <div class="player-name waiting" id="player-bass">Scan to join</div>
                 </div>
+                <div class="sequence-grid" id="grid-bass"></div>
+            </div>
+
+            <!-- Chords -->
+            <div class="instrument-row inactive" data-instrument="chords" id="row-chords">
+                <div class="qr-container" id="qr-chords"></div>
+                <div class="instrument-info">
+                    <div class="instrument-name">
+                        <span class="emoji">🎹</span>
+                        <span>Chords</span>
+                    </div>
+                    <div class="player-name waiting" id="player-chords">Scan to join</div>
+                </div>
+                <div class="sequence-grid" id="grid-chords"></div>
             </div>
         </div>
-        
-        <div class="join-section">
-            <h3>📱 Join on your phone</h3>
-            <div class="ip-config" id="ipConfig" style="display: none;">
-                <span>⚠️ Using localhost - Enter your IP:</span>
-                <input type="text" id="hostIpInput" placeholder="e.g. 192.168.1.100">
-                <button id="updateIpBtn">Update</button>
+
+        <!-- Footer Controls -->
+        <div class="footer">
+            <div class="controls">
+                <div class="beat-indicator">
+                    <div class="beat-dot" data-beat="0"></div>
+                    <div class="beat-dot" data-beat="1"></div>
+                    <div class="beat-dot" data-beat="2"></div>
+                    <div class="beat-dot" data-beat="3"></div>
+                </div>
+                <div class="bpm-display">
+                    <span id="bpmValue">120</span>
+                    <span class="label">BPM</span>
+                </div>
+                <button class="btn btn-start" id="startBtn">Start Session</button>
+                <button class="btn btn-end" id="endBtn" disabled>End Session</button>
             </div>
-            <div class="join-urls" id="joinUrls">
-                <!-- Populated by JS -->
-            </div>
+        </div>
+
+        <div class="step-indicator">
+            Step <span id="currentStep">1</span> of 16
+        </div>
+
+        <!-- IP Config for localhost testing -->
+        <div class="ip-config" id="ipConfig">
+            <span>⚠️ Using localhost - Enter your IP:</span>
+            <input type="text" id="hostIpInput" placeholder="e.g. 192.168.1.100">
+            <button id="updateIpBtn">Update QR Codes</button>
         </div>
     </div>
 
     <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        
-        // IMPORTANT: Replace with your Ably API key
-        // Get a free key at: https://ably.com/sign-up
-        const ABLY_API_KEY = '__ABLY_API_KEY__';
-        
-        const SESSION_DURATION = 180; // 3 minutes in seconds
+        // ===== CONFIGURATION =====
         const BPM = 120;
-        const QUANTIZE_SUBDIVISION = '8n'; // Quantize to 8th notes (more immediate feel)
-        
-        // ============================================
-        // STATE
-        // ============================================
-        
-        let roomCode = '';
-        let channel = null;
-        let isPlaying = false;
-        let timeRemaining = SESSION_DURATION;
-        let timerInterval = null;
-        let currentBeat = 0;
-        let totalNotes = 0;
+        const STEPS = 16;
+        const SESSION_DURATION = 180; // seconds
+
+        // ===== STATE =====
         let customHost = ''; // For overriding localhost with actual IP
-        let beatEventId = null; // Store the scheduled beat callback ID
-        
-        const players = {
-            drums: { connected: false, name: null },
-            bass: { connected: false, name: null },
-            chords: { connected: false, name: null }
-        };
-        
-        // ============================================
-        // AUDIO SETUP (Tone.js)
-        // ============================================
-        
-        // Drum samples using built-in synths (no external files needed)
-        // With stereo panning for better spatial mix
-        const drumSynths = {
-            kick: new Tone.MembraneSynth({
-                pitchDecay: 0.05,
-                octaves: 6,
-                oscillator: { type: 'sine' },
-                envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 }
-            }).chain(
-                new Tone.Panner(0).toDestination() // Center (kick is foundation)
-            ),
 
-            snare: new Tone.NoiseSynth({
-                noise: { type: 'white' },
-                envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 }
-            }).chain(
-                new Tone.Panner(-0.2).toDestination() // Slight left
-            ),
+        const state = {
+            roomCode: '',
+            currentStep: 0,
+            phase: 'idle',  // 'idle' | 'lobby' | 'playing' | 'ended'
+            isPlaying: false,
+            timeRemaining: SESSION_DURATION,
+            loopCount: 0,
 
-            hat: new Tone.MetalSynth({
-                frequency: 400,
-                envelope: { attack: 0.001, decay: 0.1, release: 0.1 },
-                harmonicity: 5.1,
-                modulationIndex: 32,
-                resonance: 4000,
-                octaves: 1.5
-            }).chain(
-                new Tone.Panner(0.4).toDestination() // Right
-            ),
-
-            clap: new Tone.NoiseSynth({
-                noise: { type: 'pink' },
-                envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-            }).chain(
-                new Tone.Panner(-0.3).toDestination() // Left
-            )
+            instruments: {
+                drums: { player: null, pattern: [] },
+                percussion: { player: null, pattern: [] },
+                bass: { player: null, pattern: [] },
+                chords: { player: null, pattern: [] }
+            }
         };
 
-        // Bass synth (centered, foundation)
-        const bassSynth = new Tone.MonoSynth({
-            oscillator: { type: 'sawtooth' },
-            filter: { Q: 2, type: 'lowpass', rolloff: -24 },
-            envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.8 },
-            filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.8, baseFrequency: 100, octaves: 2.5 }
-        }).toDestination();
+        // ===== ABLY CONNECTION =====
+        const ABLY_API_KEY = '__ABLY_API_KEY__';
+        let ably = null;
+        let playerChannel = null;
+        let sessionChannel = null;  // For broadcasting session state to players
 
-        // Chord synth (polyphonic, slightly spread)
-        const chordSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1 }
-        }).chain(
-            new Tone.Panner(0.1).toDestination() // Slight right to avoid bass clash
-        );
+        // ===== MASTER AUDIO BUS =====
+        let masterBus = null;
+        let reverbSend = null;
+        let analyser = null;
+        let visualizerCanvas = null;
+        let visualizerCtx = null;
+        let animationId = null;
 
-        // Rebalanced volumes for better mix
-        // Kick and bass are foundation, everything else supports
-        drumSynths.kick.volume.value = -3;   // Louder - foundation
-        drumSynths.snare.volume.value = -8;  // Medium - backbeat
-        drumSynths.hat.volume.value = -14;   // Quieter - texture
-        drumSynths.clap.volume.value = -10;  // Medium-quiet - accent
-        bassSynth.volume.value = -6;         // Loud - groove foundation
-        chordSynth.volume.value = -12;       // Quieter - harmony support
-        
-        // Chord definitions (in C major/A minor scale)
-        // Raised one octave to avoid clashing with bass frequencies
-        const chordNotes = {
+        // ===== DRUM SYNTHS =====
+        let drumSynths = null;
+
+        // ===== PERCUSSION SYNTHS =====
+        let percussionSynths = null;
+
+        // ===== BASS SYNTH =====
+        let bassSynth = null;
+        let currentPlayingBassNote = null;
+
+        // Bass note pitches (octave 2 for deep bass)
+        const BASS_NOTES = {
+            'C': 'C2',
+            'D': 'D2',
+            'E': 'E2',
+            'F': 'F2',
+            'G': 'G2',
+            'A': 'A2'
+        };
+
+        // ===== CHORD SYNTH =====
+        let chordSynth = null;
+        let currentPlayingChord = null;  // Track what's currently sounding
+
+        // Chord voicings
+        const CHORD_VOICINGS = {
             'Am': ['A3', 'C4', 'E4'],
-            'F': ['F3', 'A3', 'C4'],
-            'C': ['C3', 'E3', 'G3'],
-            'G': ['G3', 'B3', 'D4'],
+            'F':  ['F3', 'A3', 'C4'],
+            'C':  ['C3', 'E3', 'G3'],
+            'G':  ['G3', 'B3', 'D4'],
             'Em': ['E3', 'G3', 'B3'],
             'Dm': ['D3', 'F3', 'A3']
         };
-        
-        // Bass notes (C minor pentatonic for "no wrong notes")
-        const bassNotes = {
-            'C': 'C2',
-            'D': 'D2',
-            'E': 'Eb2', // Flat for minor feel
-            'F': 'F2',
-            'G': 'G2',
-            'A': 'Ab2', // Flat for minor feel
-            'B': 'Bb2'  // Flat for minor feel
-        };
-        
-        // ============================================
-        // PLAY SOUNDS (with quantization)
-        // ============================================
-        
-        function playDrum(note, velocity = 0.7) {
-            const time = Tone.Transport.nextSubdivision(QUANTIZE_SUBDIVISION);
 
-            switch(note) {
-                case 'kick':
-                    drumSynths.kick.triggerAttackRelease('C1', '8n', time, velocity);
-                    break;
-                case 'snare':
-                    drumSynths.snare.triggerAttackRelease('8n', time, velocity);
-                    break;
-                case 'hat':
-                    drumSynths.hat.triggerAttackRelease('C6', '32n', time, velocity * 0.8);
-                    break;
-                case 'clap':
-                    drumSynths.clap.triggerAttackRelease('16n', time, velocity);
-                    break;
-            }
-
-            showActivity('drums');
-            totalNotes++;
-        }
-        
-        function playBass(note, action = 'on') {
-            const actualNote = bassNotes[note] || 'C2';
-
-            if (action === 'on') {
-                // Start sustaining the note (immediate, no quantization)
-                bassSynth.triggerAttack(actualNote);
-                showActivity('bass');
-                totalNotes++;
-            } else if (action === 'off') {
-                // Release the note (immediate, no quantization)
-                bassSynth.triggerRelease();
-            }
-        }
-        
-        function playChord(chord, action = 'on') {
-            const notes = chordNotes[chord] || chordNotes['Am'];
-
-            if (action === 'on') {
-                // Start sustaining the chord (immediate, no quantization)
-                chordSynth.triggerAttack(notes);
-                showActivity('chords');
-                totalNotes++;
-            } else if (action === 'off') {
-                // Release the specific chord notes (immediate, no quantization)
-                chordSynth.triggerRelease(notes);
-            }
-        }
-        
-        // ============================================
-        // VISUAL FEEDBACK
-        // ============================================
-        
-        function showActivity(instrument) {
-            // Flash the center circle
-            const center = document.querySelector('.center-circle');
-            center.classList.add('pulse');
-            setTimeout(() => center.classList.remove('pulse'), 100);
-            
-            // Flash the activity overlay
-            const flash = document.querySelector(`.activity-flash.${instrument}`);
-            flash.classList.add('active');
-            setTimeout(() => flash.classList.remove('active'), 150);
-            
-            // Animate the instrument card activity bars
-            const card = document.getElementById(`card-${instrument}`);
-            const bars = card.querySelectorAll('.activity-bar .bar');
-            bars.forEach(bar => {
-                bar.style.height = `${5 + Math.random() * 15}px`;
+        function initMasterBus() {
+            // Master chain: Compressor → Limiter → Analyser → Destination
+            // Compressor glues the mix together
+            const masterCompressor = new Tone.Compressor({
+                threshold: -20,
+                ratio: 3,
+                attack: 0.01,
+                release: 0.2
             });
-            setTimeout(() => {
-                bars.forEach(bar => {
-                    bar.style.height = '5px';
-                });
-            }, 200);
+
+            const masterLimiter = new Tone.Limiter(-1);
+
+            // Analyser for visualization (FFT)
+            analyser = new Tone.Analyser('fft', 64);
+
+            masterCompressor.connect(masterLimiter);
+            masterLimiter.connect(analyser);
+            analyser.toDestination();
+
+            // Reverb send for spatial depth (not used by kick/bass)
+            const reverb = new Tone.Reverb({
+                decay: 1.5,
+                wet: 0.3,
+                preDelay: 0.01
+            }).connect(masterCompressor);
+
+            // Store references
+            masterBus = masterCompressor;
+            reverbSend = reverb;
+
+            console.log('Master audio bus initialized');
         }
-        
-        function updateBeatIndicator(beat) {
-            const dots = document.querySelectorAll('.beat-dot');
-            dots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === beat);
-            });
-            
-            // Pulse ring on beat 1
-            if (beat === 0) {
-                const ring = document.querySelector('.pulse-ring');
-                ring.classList.add('active');
-                setTimeout(() => ring.classList.remove('active'), 300);
-            }
-        }
-        
-        // ============================================
-        // TIMER
-        // ============================================
-        
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            const timerEl = document.getElementById('timer');
-            timerEl.textContent = display;
-            
-            if (timeRemaining <= 30) {
-                timerEl.classList.add('warning');
-            }
-        }
-        
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
-                
-                // Broadcast time to players
-                if (channel) {
-                    channel.publish('session', { 
-                        type: 'session', 
-                        status: 'playing', 
-                        timeRemaining 
-                    });
+
+        // Smoothed audio values for visualization
+        let smoothedBass = 0;
+        let smoothedMid = 0;
+        let smoothedHigh = 0;
+        let smoothedOverall = 0;
+        let prevBass = 0;
+        let hueOffset = 0;
+
+        // Particle system
+        let particles = [];
+        const MAX_PARTICLES = 150;
+
+        class Particle {
+            constructor(x, y, hue, type) {
+                this.x = x;
+                this.y = y;
+                this.hue = hue;
+                this.type = type; // 'bass', 'mid', 'high'
+                this.life = 1;
+                this.maxLife = 1;
+
+                if (type === 'bass') {
+                    // Bass particles - large, slow, rise up
+                    this.size = 20 + Math.random() * 40;
+                    this.vx = (Math.random() - 0.5) * 2;
+                    this.vy = -2 - Math.random() * 3;
+                    this.decay = 0.008 + Math.random() * 0.008;
+                } else if (type === 'mid') {
+                    // Mid particles - medium, spread outward
+                    this.size = 8 + Math.random() * 15;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 4;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.decay = 0.015 + Math.random() * 0.01;
+                } else {
+                    // High particles - small, fast, sparkle
+                    this.size = 3 + Math.random() * 8;
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 4 + Math.random() * 6;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.decay = 0.025 + Math.random() * 0.02;
                 }
-                
-                if (timeRemaining <= 0) {
-                    endSession();
-                }
-            }, 1000);
-        }
-        
-        function endSession(endedEarly = false) {
-            isPlaying = false;
-            clearInterval(timerInterval);
-            Tone.Transport.stop();
-
-            // Clear the beat callback
-            if (beatEventId !== null) {
-                Tone.Transport.clear(beatEventId);
-                beatEventId = null;
             }
 
-            // Release all sustained notes (bass and chords)
-            // This prevents notes from continuing to play after session ends
-            bassSynth.triggerRelease();
-            chordSynth.releaseAll();
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+                this.vy += 0.05; // Slight gravity
+                this.vx *= 0.99; // Air resistance
+            }
 
-            // Hide end session button
-            document.getElementById('endSessionBtn').classList.add('hidden');
+            draw(ctx) {
+                const alpha = this.life * 0.7;
+                const size = this.size * this.life;
 
-            // Calculate session stats
-            const connectedPlayers = Object.values(players).filter(p => p.connected);
-            const totalPlayers = connectedPlayers.length;
-            const durationPlayed = SESSION_DURATION - timeRemaining;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
 
-            // Track session end
-            trackEvent('session_ended', {
-                room_code: roomCode,
-                completion_type: endedEarly ? 'ended_early' : 'completed',
-                duration_seconds: durationPlayed,
-                total_players: totalPlayers,
-                total_notes: totalNotes,
-                drums_connected: players.drums.connected,
-                bass_connected: players.bass.connected,
-                chords_connected: players.chords.connected
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, size
+                );
+                gradient.addColorStop(0, `hsla(${this.hue}, 90%, 60%, ${alpha})`);
+                gradient.addColorStop(0.5, `hsla(${this.hue}, 80%, 50%, ${alpha * 0.5})`);
+                gradient.addColorStop(1, `hsla(${this.hue}, 70%, 40%, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+        }
+
+        function spawnParticles(type, count, hue, width, height) {
+            for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
+                let x, y;
+                if (type === 'bass') {
+                    // Spawn from bottom center
+                    x = width / 2 + (Math.random() - 0.5) * width * 0.5;
+                    y = height * 0.9;
+                } else if (type === 'mid') {
+                    // Spawn from center
+                    x = width / 2 + (Math.random() - 0.5) * 100;
+                    y = height / 2 + (Math.random() - 0.5) * 100;
+                } else {
+                    // Spawn randomly across top half
+                    x = Math.random() * width;
+                    y = Math.random() * height * 0.6;
+                }
+                particles.push(new Particle(x, y, hue, type));
+            }
+        }
+
+        function initVisualizer() {
+            visualizerCanvas = document.getElementById('visualizer');
+            visualizerCtx = visualizerCanvas.getContext('2d');
+            resizeVisualizer();
+            particles = [];
+
+            // Handle window resize
+            window.addEventListener('resize', resizeVisualizer);
+        }
+
+        function resizeVisualizer() {
+            if (!visualizerCanvas) return;
+            visualizerCanvas.width = window.innerWidth;
+            visualizerCanvas.height = window.innerHeight;
+        }
+
+        function drawVisualizer() {
+            if (!analyser || !visualizerCtx || !state.isPlaying) return;
+
+            const canvas = visualizerCanvas;
+            const ctx = visualizerCtx;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Get frequency data from analyser
+            const frequencyData = analyser.getValue();
+
+            // Calculate frequency band averages (values are in dB, -100 to 0)
+            const bassRange = frequencyData.slice(0, 8);
+            const midRange = frequencyData.slice(8, 24);
+            const highRange = frequencyData.slice(24, 48);
+
+            const avgBass = bassRange.reduce((a, b) => a + b, 0) / bassRange.length;
+            const avgMid = midRange.reduce((a, b) => a + b, 0) / midRange.length;
+            const avgHigh = highRange.reduce((a, b) => a + b, 0) / highRange.length;
+            const avgOverall = (avgBass + avgMid + avgHigh) / 3;
+
+            // Normalize to 0-1 range with boost
+            const normBass = Math.pow(Math.max(0, (avgBass + 70) / 50), 1.8);
+            const normMid = Math.pow(Math.max(0, (avgMid + 70) / 50), 1.6);
+            const normHigh = Math.pow(Math.max(0, (avgHigh + 70) / 50), 1.5);
+            const normOverall = Math.pow(Math.max(0, (avgOverall + 70) / 50), 1.4);
+
+            // Smooth the values (faster response)
+            const smoothing = 0.7;
+            smoothedBass = smoothedBass * smoothing + normBass * (1 - smoothing);
+            smoothedMid = smoothedMid * smoothing + normMid * (1 - smoothing);
+            smoothedHigh = smoothedHigh * smoothing + normHigh * (1 - smoothing);
+            smoothedOverall = smoothedOverall * smoothing + normOverall * (1 - smoothing);
+
+            // Rotate hue faster
+            hueOffset = (hueOffset + 0.5) % 360;
+
+            // Base colors - more saturated and varied
+            const bassHue = (280 + hueOffset + smoothedBass * 60) % 360;
+            const midHue = (180 + hueOffset + smoothedMid * 80) % 360;
+            const highHue = (320 + hueOffset + smoothedHigh * 100) % 360;
+
+            // More dramatic saturation and lightness
+            const baseSat = 70 + smoothedOverall * 25;
+            const baseLight = 10 + smoothedOverall * 25;
+
+            // Create radial gradient from center
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const maxRadius = Math.sqrt(centerX * centerX + centerY * centerY);
+
+            // Pulsing center offset based on bass
+            const pulseOffset = smoothedBass * 50;
+
+            const gradient = ctx.createRadialGradient(
+                centerX, centerY - pulseOffset, 0,
+                centerX, centerY, maxRadius
+            );
+
+            // More dramatic color stops
+            const innerLight = baseLight + smoothedBass * 35;
+            gradient.addColorStop(0, `hsl(${bassHue}, ${baseSat + 15}%, ${innerLight}%)`);
+            gradient.addColorStop(0.3, `hsl(${midHue}, ${baseSat + 5}%, ${baseLight + 5}%)`);
+            gradient.addColorStop(0.6, `hsl(${highHue}, ${baseSat}%, ${baseLight}%)`);
+            gradient.addColorStop(1, `hsl(${(highHue + 40) % 360}, 50%, 3%)`);
+
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Spawn particles on beats (detect transients)
+            const bassThreshold = 0.4;
+            const midThreshold = 0.35;
+            const highThreshold = 0.3;
+
+            // Bass hit detection
+            if (smoothedBass > bassThreshold && smoothedBass > prevBass + 0.1) {
+                spawnParticles('bass', Math.floor(smoothedBass * 8), bassHue, width, height);
+            }
+            // Mid hit - continuous spawning when active
+            if (smoothedMid > midThreshold) {
+                spawnParticles('mid', Math.floor(smoothedMid * 3), midHue, width, height);
+            }
+            // High sparkles
+            if (smoothedHigh > highThreshold) {
+                spawnParticles('high', Math.floor(smoothedHigh * 5), highHue, width, height);
+            }
+
+            prevBass = smoothedBass;
+
+            // Update and draw particles
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
             });
 
-            // Show end screen
-            document.getElementById('statNotes').textContent = totalNotes;
-            document.getElementById('statPlayers').textContent = totalPlayers;
-            document.getElementById('endOverlay').classList.remove('hidden');
+            // Add large pulsing glow on strong bass
+            if (smoothedBass > 0.3) {
+                const glowRadius = 150 + smoothedBass * 400;
+                const glowGradient = ctx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, glowRadius
+                );
+                glowGradient.addColorStop(0, `hsla(${bassHue}, 100%, 60%, ${smoothedBass * 0.4})`);
+                glowGradient.addColorStop(0.5, `hsla(${bassHue}, 90%, 50%, ${smoothedBass * 0.2})`);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.fillRect(0, 0, width, height);
+            }
 
-            // Generate survey QR code
-            const surveyQR = document.getElementById('surveyQR');
-            surveyQR.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' +
-                          encodeURIComponent('https://forms.gle/3KSkcUiae2DvfePr9');
+            // Pulsing rings on mids
+            if (smoothedMid > 0.3) {
+                const ringCount = 3;
+                for (let i = 0; i < ringCount; i++) {
+                    const ringRadius = 100 + i * 150 + smoothedMid * 100;
+                    const ringAlpha = (smoothedMid - 0.3) * 0.3 * (1 - i / ringCount);
+                    ctx.strokeStyle = `hsla(${midHue}, 80%, 60%, ${ringAlpha})`;
+                    ctx.lineWidth = 2 + smoothedMid * 4;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
 
-            // Notify players
-            if (channel) {
-                channel.publish('session', { type: 'session', status: 'ended' });
+            // Corner and edge glows
+            const cornerSize = 200 + smoothedHigh * 200;
+            const cornerAlpha = 0.1 + smoothedHigh * 0.3;
+
+            // All four corners
+            [[0, 0], [width, 0], [0, height], [width, height]].forEach(([cx, cy], i) => {
+                const cornerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, cornerSize);
+                cornerGrad.addColorStop(0, `hsla(${(highHue + i * 30) % 360}, 80%, 60%, ${cornerAlpha})`);
+                cornerGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = cornerGrad;
+                ctx.fillRect(
+                    cx === 0 ? 0 : cx - cornerSize,
+                    cy === 0 ? 0 : cy - cornerSize,
+                    cornerSize,
+                    cornerSize
+                );
+            });
+
+            // Continue animation loop
+            animationId = requestAnimationFrame(drawVisualizer);
+        }
+
+        function startVisualizer() {
+            if (!visualizerCanvas) {
+                initVisualizer();
+            }
+            particles = [];
+            // Show the visualizer
+            document.getElementById('visualizerBg').style.opacity = '1';
+            drawVisualizer();
+        }
+
+        function stopVisualizer() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            // Fade out and clear the canvas
+            const bg = document.getElementById('visualizerBg');
+            if (bg) bg.style.opacity = '0';
+            if (visualizerCtx && visualizerCanvas) {
+                visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+            }
+            // Reset smoothed values
+            smoothedBass = 0;
+            smoothedMid = 0;
+            smoothedHigh = 0;
+            smoothedOverall = 0;
+            prevBass = 0;
+            particles = [];
+        }
+
+        function initDrumSynths() {
+            // High-pass filter for non-kick drums (keeps low end clean for kick/bass)
+            const drumHighPass = new Tone.Filter({
+                type: 'highpass',
+                frequency: 100,
+                Q: 0.7
+            }).connect(masterBus);
+
+            // Snare/clap/hihat also go to reverb for depth
+            const drumReverbGain = new Tone.Gain(0.3).connect(reverbSend);
+
+            // Create panners for stereo spread
+            const kickPanner = new Tone.Panner(0).connect(masterBus);  // Kick goes direct (no HP, no reverb)
+            const snarePanner = new Tone.Panner(-0.2).connect(drumHighPass);
+            const hihatPanner = new Tone.Panner(0.4).connect(drumHighPass);
+            const clapPanner = new Tone.Panner(-0.3).connect(drumHighPass);
+
+            // Send snare/hihat/clap to reverb
+            snarePanner.connect(drumReverbGain);
+            hihatPanner.connect(drumReverbGain);
+            clapPanner.connect(drumReverbGain);
+
+            drumSynths = {
+                kick: new Tone.MembraneSynth({
+                    pitchDecay: 0.05,
+                    octaves: 6,
+                    oscillator: { type: 'sine' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.3,
+                        sustain: 0,
+                        release: 0.1
+                    }
+                }).connect(kickPanner),
+
+                snare: new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.15,
+                        sustain: 0,
+                        release: 0.05
+                    }
+                }).connect(snarePanner),
+
+                hihat: new Tone.MetalSynth({
+                    frequency: 400,
+                    harmonicity: 5.1,
+                    modulationIndex: 32,
+                    resonance: 4000,
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.08,
+                        release: 0.01
+                    }
+                }).connect(hihatPanner),
+
+                clap: new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: {
+                        attack: 0.005,
+                        decay: 0.1,
+                        sustain: 0,
+                        release: 0.05
+                    }
+                }).connect(clapPanner)
+            };
+
+            // Set volumes (rebalanced for proper mix hierarchy)
+            // Kick is foundation - prominent but not overwhelming
+            drumSynths.kick.volume.value = -8;
+            // Snare cuts through but sits back
+            drumSynths.snare.volume.value = -12;
+            // Hi-hats are naturally bright, keep them low
+            drumSynths.hihat.volume.value = -18;
+            // Claps accent, not dominate
+            drumSynths.clap.volume.value = -14;
+        }
+
+        function playDrumSound(sound, time) {
+            if (!drumSynths || !drumSynths[sound]) return;
+
+            if (sound === 'kick') {
+                drumSynths.kick.triggerAttackRelease('C1', '8n', time);
+            } else if (sound === 'snare') {
+                drumSynths.snare.triggerAttackRelease('8n', time);
+            } else if (sound === 'hihat') {
+                drumSynths.hihat.triggerAttackRelease('32n', time);
+            } else if (sound === 'clap') {
+                drumSynths.clap.triggerAttackRelease('16n', time);
             }
         }
-        
-        // ============================================
-        // ROOM & CONNECTION SETUP
-        // ============================================
-        
+
+        function initPercussionSynths() {
+            // High-pass filter for percussion (cut below 200Hz to keep low end clean)
+            const percHighPass = new Tone.Filter({
+                type: 'highpass',
+                frequency: 200,
+                Q: 0.7
+            }).connect(masterBus);
+
+            // Reverb send for percussion (adds space)
+            const percReverbGain = new Tone.Gain(0.25).connect(reverbSend);
+
+            // Create panners for stereo spread (spread percussion across the field)
+            const cowbellPanner = new Tone.Panner(0.3).connect(percHighPass);
+            const clavePanner = new Tone.Panner(-0.4).connect(percHighPass);
+            const trianglePanner = new Tone.Panner(0.6).connect(percHighPass);
+            const tambPanner = new Tone.Panner(0.2).connect(percHighPass);
+            const congaHiPanner = new Tone.Panner(-0.3).connect(percHighPass);
+            const congaLoPanner = new Tone.Panner(-0.1).connect(percHighPass);
+
+            // Send to reverb
+            cowbellPanner.connect(percReverbGain);
+            clavePanner.connect(percReverbGain);
+            trianglePanner.connect(percReverbGain);
+            tambPanner.connect(percReverbGain);
+            congaHiPanner.connect(percReverbGain);
+            congaLoPanner.connect(percReverbGain);
+
+            // Cowbell: two square oscillators + bandpass filter
+            const cowbellGain = new Tone.Gain(0).connect(cowbellPanner);
+            const cowbellFilter = new Tone.Filter({
+                type: "bandpass",
+                frequency: 800,
+                Q: 10
+            }).connect(cowbellGain);
+
+            // Triangle: FM synthesis for metallic ring
+            const triangle = new Tone.FMSynth({
+                harmonicity: 5.1,
+                modulationIndex: 4,
+                oscillator: { type: "sine" },
+                modulation: { type: "triangle" },
+                envelope: { attack: 0.001, decay: 2.5, sustain: 0, release: 1.5 },
+                modulationEnvelope: { attack: 0.001, decay: 1.5, sustain: 0.2, release: 1 }
+            }).connect(trianglePanner);
+            triangle.volume.value = -16;  // Quieter - triangles cut through
+
+            // Clave: woody click
+            const clave = new Tone.MembraneSynth({
+                pitchDecay: 0.008,
+                octaves: 2,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.01 }
+            }).connect(clavePanner);
+            clave.volume.value = -14;  // Sits back in mix
+
+            // Tambourine: metallic ring + white noise
+            const tambMix = new Tone.Gain(0.5).connect(tambPanner);
+            const tambMetal = new Tone.MetalSynth({
+                frequency: 300,
+                harmonicity: 5.1,
+                modulationIndex: 16,
+                resonance: 3000,
+                envelope: { attack: 0.001, decay: 0.1, release: 0.05 }
+            }).connect(tambMix);
+            tambMetal.volume.value = -16;
+            const tambNoise = new Tone.NoiseSynth({
+                noise: { type: "white" },
+                envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.03 }
+            }).connect(tambMix);
+            tambNoise.volume.value = -20;
+
+            // Conga High - sits back but audible
+            const congaHigh = new Tone.MembraneSynth({
+                pitchDecay: 0.03,
+                octaves: 4,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 }
+            }).connect(congaHiPanner);
+            congaHigh.volume.value = -12;
+
+            // Conga Low - a bit louder for body
+            const congaLow = new Tone.MembraneSynth({
+                pitchDecay: 0.045,
+                octaves: 5,
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.15 }
+            }).connect(congaLoPanner);
+            congaLow.volume.value = -10;
+
+            percussionSynths = {
+                cowbellGain,
+                cowbellFilter,
+                cowbellOsc1: null,
+                cowbellOsc2: null,
+                triangle,
+                clave,
+                tambMetal,
+                tambNoise,
+                congaHigh,
+                congaLow
+            };
+        }
+
+        function initChordSynth() {
+            // High-pass filter for chords (cut below 150Hz to not compete with bass)
+            const chordHighPass = new Tone.Filter({
+                type: 'highpass',
+                frequency: 150,
+                Q: 0.7
+            }).connect(masterBus);
+
+            // Reverb send for chords (more reverb for pads)
+            const chordReverbGain = new Tone.Gain(0.4).connect(reverbSend);
+
+            const chordPanner = new Tone.Panner(0.15).connect(chordHighPass);
+            chordPanner.connect(chordReverbGain);
+
+            chordSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'triangle' },
+                envelope: {
+                    attack: 0.02,
+                    decay: 0.3,
+                    sustain: 0.4,
+                    release: 0.8
+                }
+            }).connect(chordPanner);
+
+            // Chords fill space but don't dominate
+            chordSynth.volume.value = -14;
+        }
+
+        function playChord(chordName, time) {
+            if (!chordSynth || !CHORD_VOICINGS[chordName]) return;
+
+            const notes = CHORD_VOICINGS[chordName];
+
+            // Release any currently playing chord first
+            if (currentPlayingChord) {
+                chordSynth.triggerRelease(CHORD_VOICINGS[currentPlayingChord], time);
+            }
+
+            // Play the new chord
+            chordSynth.triggerAttack(notes, time);
+            currentPlayingChord = chordName;
+        }
+
+        function releaseChord(time) {
+            if (!chordSynth || !currentPlayingChord) return;
+            chordSynth.triggerRelease(CHORD_VOICINGS[currentPlayingChord], time);
+            currentPlayingChord = null;
+        }
+
+        function initBassSynth() {
+            // Bass goes direct to master (no high-pass, no reverb - keeps low end tight)
+            const bassPanner = new Tone.Panner(0).connect(masterBus);  // Center (bass anchors the mix)
+
+            bassSynth = new Tone.MonoSynth({
+                oscillator: { type: 'sawtooth' },
+                filter: {
+                    Q: 2,
+                    type: 'lowpass',
+                    rolloff: -24
+                },
+                envelope: {
+                    attack: 0.01,
+                    decay: 0.3,
+                    sustain: 0.4,
+                    release: 0.5
+                },
+                filterEnvelope: {
+                    attack: 0.01,
+                    decay: 0.2,
+                    sustain: 0.3,
+                    release: 0.5,
+                    baseFrequency: 200,
+                    octaves: 2.5
+                }
+            }).connect(bassPanner);
+
+            // Bass is foundation with kick - prominent but controlled
+            bassSynth.volume.value = -10;
+        }
+
+        function playBassNote(note, time) {
+            if (!bassSynth || !BASS_NOTES[note]) return;
+
+            const pitch = BASS_NOTES[note];
+
+            // Release previous note if different
+            if (currentPlayingBassNote && currentPlayingBassNote !== note) {
+                bassSynth.triggerRelease(time);
+            }
+
+            bassSynth.triggerAttack(pitch, time);
+            currentPlayingBassNote = note;
+        }
+
+        function releaseBassNote(time) {
+            if (!bassSynth || !currentPlayingBassNote) return;
+            bassSynth.triggerRelease(time);
+            currentPlayingBassNote = null;
+        }
+
+        function playPercussionSound(sound, time) {
+            if (!percussionSynths) return;
+
+            switch (sound) {
+                case 'cowbell':
+                    // Stop any existing cowbell oscillators
+                    if (percussionSynths.cowbellOsc1) {
+                        try { percussionSynths.cowbellOsc1.stop(); percussionSynths.cowbellOsc1.dispose(); } catch(e) {}
+                    }
+                    if (percussionSynths.cowbellOsc2) {
+                        try { percussionSynths.cowbellOsc2.stop(); percussionSynths.cowbellOsc2.dispose(); } catch(e) {}
+                    }
+                    // Create fresh oscillators
+                    percussionSynths.cowbellOsc1 = new Tone.Oscillator({ type: "square", frequency: 800 }).connect(percussionSynths.cowbellFilter);
+                    percussionSynths.cowbellOsc2 = new Tone.Oscillator({ type: "square", frequency: 540 }).connect(percussionSynths.cowbellFilter);
+                    percussionSynths.cowbellOsc1.start(time).stop(time + 0.35);
+                    percussionSynths.cowbellOsc2.start(time).stop(time + 0.35);
+                    percussionSynths.cowbellGain.gain.cancelScheduledValues(time);
+                    percussionSynths.cowbellGain.gain.setValueAtTime(0.25, time);
+                    percussionSynths.cowbellGain.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+                    break;
+                case 'triangle':
+                    percussionSynths.triangle.triggerAttackRelease("A6", "2n", time);
+                    break;
+                case 'clave':
+                    percussionSynths.clave.triggerAttackRelease("G5", "32n", time);
+                    break;
+                case 'tambourine':
+                    percussionSynths.tambMetal.triggerAttackRelease("16n", time);
+                    percussionSynths.tambNoise.triggerAttackRelease("16n", time);
+                    break;
+                case 'congaHi':
+                    percussionSynths.congaHigh.triggerAttackRelease("G4", "8n", time);
+                    break;
+                case 'congaLo':
+                    percussionSynths.congaLow.triggerAttackRelease("C3", "8n", time);
+                    break;
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        function init() {
+            generateRoomCode();
+            initSequenceGrids();
+            generateQRCodes();
+            setupAbly();
+            setupEventListeners();
+            setupToneTransport();
+        }
+
         function generateRoomCode() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let code = '';
-            for (let i = 0; i < 4; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-        
-        function updateJoinUrls() {
-            // Determine the base URL to use
-            let origin = customHost || window.location.origin;
+            state.roomCode = Array.from({length: 4}, () =>
+                chars[Math.floor(Math.random() * chars.length)]
+            ).join('');
+            document.getElementById('roomCode').textContent = state.roomCode;
 
-            // Handle both /host.html and / (index.html) paths
-            let pathname = window.location.pathname;
-            if (pathname.includes('host.html')) {
-                pathname = pathname.replace('host.html', 'play.html');
-            } else if (pathname === '/' || pathname.includes('index.html')) {
-                pathname = '/play.html';
-            }
-            const baseUrl = origin + pathname;
-            const container = document.getElementById('joinUrls');
+            trackEvent('session_created', { room_code: state.roomCode });
+        }
+
+        function initSequenceGrids() {
+            const instruments = ['drums', 'percussion', 'bass', 'chords'];
+
+            instruments.forEach(instrument => {
+                const grid = document.getElementById(`grid-${instrument}`);
+                grid.innerHTML = '';
+
+                for (let i = 0; i < STEPS; i++) {
+                    const step = document.createElement('div');
+                    step.className = 'step' + (i % 4 === 0 && i > 0 ? ' beat-marker' : '');
+                    step.dataset.step = i;
+                    grid.appendChild(step);
+                }
+            });
+        }
+
+        function generateQRCodes() {
+            // Use customHost if set, otherwise use origin
+            let origin = customHost || window.location.origin;
+            const instruments = ['drums', 'percussion', 'bass', 'chords'];
 
             // Show IP config warning if using localhost
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -998,247 +1702,546 @@
                 ipConfig.style.display = 'none';
             }
 
-            const instruments = [
-                { id: 'drums', emoji: '🥁', name: 'Drums' },
-                { id: 'bass', emoji: '🎸', name: 'Bass' },
-                { id: 'chords', emoji: '🎹', name: 'Chords' }
-            ];
+            instruments.forEach(instrument => {
+                const url = `${origin}/${instrument}.html?room=${state.roomCode}`;
+                const container = document.getElementById(`qr-${instrument}`);
 
-            container.innerHTML = instruments.map(inst => {
-                const url = `${baseUrl}?room=${roomCode}&instrument=${inst.id}`;
-                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(url)}`;
+                // Clear container and create canvas
+                container.innerHTML = '';
+                const canvas = document.createElement('canvas');
+                container.appendChild(canvas);
 
-                return `
-                    <div class="join-url">
-                        <div class="label">${inst.emoji} ${inst.name}</div>
-                        <div class="qr-code">
-                            <img src="${qrCodeUrl}" alt="QR code for ${inst.name}" />
-                        </div>
-                        <div class="url">${url}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function updatePlayerStatus(instrument, connected, name = null) {
-            players[instrument] = { connected, name };
-            
-            const card = document.getElementById(`card-${instrument}`);
-            const status = card.querySelector('.status');
-            
-            if (connected) {
-                card.classList.add('connected');
-                status.textContent = name || 'Connected';
-            } else {
-                card.classList.remove('connected');
-                status.textContent = 'Waiting...';
-            }
-        }
-        
-        async function setupAbly() {
-            if (ABLY_API_KEY === 'YOUR_ABLY_API_KEY_HERE') {
-                alert('Please add your Ably API key in host.html!\n\nGet a free key at: https://ably.com/sign-up');
-                trackEvent('connection_error', {
-                    error_type: 'missing_api_key',
-                    screen: 'host'
+                QRCode.toCanvas(canvas, url, {
+                    width: 72,
+                    margin: 0,
+                    color: { dark: '#1a1a2e', light: '#ffffff' }
+                }, (error) => {
+                    if (error) console.error(`QR error for ${instrument}:`, error);
                 });
-                return false;
+            });
+        }
+
+        // ===== ABLY SETUP =====
+        function setupAbly() {
+            if (ABLY_API_KEY.startsWith('__')) {
+                console.warn('Ably API key not configured');
+                return;
             }
 
-            const ably = new Ably.Realtime(ABLY_API_KEY);
-            channel = ably.channels.get(`jam-${roomCode}`);
+            ably = new Ably.Realtime({ key: ABLY_API_KEY });
 
-            // Handle connection errors
-            ably.connection.on('failed', (stateChange) => {
-                trackEvent('connection_error', {
-                    error_type: 'ably_connection_failed',
-                    error_message: stateChange.reason?.message || 'Unknown error',
-                    screen: 'host',
-                    room_code: roomCode
+            ably.connection.on('connected', () => {
+                console.log('Ably connected');
+                playerChannel = ably.channels.get(`room-${state.roomCode}-player`);
+                sessionChannel = ably.channels.get(`room-${state.roomCode}-session`);
+
+                playerChannel.subscribe((message) => {
+                    handlePlayerMessage(message.data);
                 });
             });
 
-            // Listen for player messages
-            channel.subscribe('player', (message) => {
-                const data = message.data;
+            ably.connection.on('failed', (err) => {
+                console.error('Ably connection failed:', err);
+                trackEvent('connection_error', { error: 'ably_failed' });
+            });
+        }
 
-                switch(data.type) {
-                    case 'join':
-                        updatePlayerStatus(data.instrument, true, data.name);
-                        // Track player join
-                        const newPlayerCount = Object.values(players).filter(p => p.connected).length;
-                        trackEvent('player_joined', {
-                            room_code: roomCode,
-                            instrument: data.instrument,
-                            player_count: newPlayerCount
-                        });
-                        break;
-                    case 'leave':
-                        updatePlayerStatus(data.instrument, false);
-                        break;
-                    case 'drums':
-                        if (isPlaying) playDrum(data.note, data.velocity);
-                        break;
-                    case 'bass':
-                        if (isPlaying) playBass(data.note, data.action);
-                        break;
-                    case 'chords':
-                        if (isPlaying) playChord(data.chord, data.action);
-                        break;
+        function handlePlayerMessage(data) {
+            console.log('Player message:', data);
+
+            switch (data.type) {
+                case 'player_joined':
+                    handlePlayerJoined(data.instrument, data.player);
+                    break;
+
+                case 'pattern_update':
+                    handlePatternUpdate(data.instrument, data.pattern);
+                    break;
+            }
+        }
+
+        function handlePlayerJoined(instrument, playerName) {
+            if (!state.instruments[instrument]) return;
+
+            state.instruments[instrument].player = playerName;
+
+            // Update main UI
+            const row = document.getElementById(`row-${instrument}`);
+            const playerEl = document.getElementById(`player-${instrument}`);
+
+            row.classList.remove('inactive');
+            playerEl.textContent = playerName;
+            playerEl.classList.remove('waiting');
+
+            // Flash animation
+            row.classList.add('flash');
+            setTimeout(() => row.classList.remove('flash'), 500);
+
+            // Update lobby status if in lobby phase
+            if (state.phase === 'lobby') {
+                updateLobbyStatus(instrument, playerName);
+            }
+
+            // If session is already playing, notify late joiner
+            if (state.phase === 'playing' && sessionChannel) {
+                sessionChannel.publish('session', {
+                    type: 'session_start',
+                    timeRemaining: state.timeRemaining
+                });
+            }
+
+            trackEvent('player_joined', {
+                instrument,
+                room_code: state.roomCode
+            });
+        }
+
+        function handlePatternUpdate(instrument, pattern) {
+            if (!state.instruments[instrument]) return;
+
+            state.instruments[instrument].pattern = pattern;
+            renderPattern(instrument);
+
+            // Flash animation
+            const row = document.getElementById(`row-${instrument}`);
+            row.classList.add('flash');
+            setTimeout(() => row.classList.remove('flash'), 300);
+        }
+
+        function renderPattern(instrument) {
+            const grid = document.getElementById(`grid-${instrument}`);
+            const pattern = state.instruments[instrument].pattern;
+            const steps = grid.querySelectorAll('.step');
+
+            // Clear all steps
+            steps.forEach(step => {
+                step.textContent = '';
+                step.classList.remove('active', 'sustain-start', 'sustain-middle', 'sustain-end');
+            });
+
+            // Render pattern
+            pattern.forEach(item => {
+                const stepEl = steps[item.step];
+                if (!stepEl) return;
+
+                stepEl.classList.add('active');
+
+                // For drums/percussion: single character
+                if (item.sound) {
+                    stepEl.textContent = item.sound.charAt(0).toUpperCase();
+                }
+                // For bass: note name
+                else if (item.note) {
+                    stepEl.textContent = item.note;
+                    // Handle sustain
+                    if (item.duration > 1) {
+                        stepEl.classList.add('sustain-start');
+                        for (let i = 1; i < item.duration; i++) {
+                            const sustainStep = steps[item.step + i];
+                            if (sustainStep) {
+                                sustainStep.classList.add('active');
+                                sustainStep.classList.add(i === item.duration - 1 ? 'sustain-end' : 'sustain-middle');
+                            }
+                        }
+                    }
+                }
+                // For chords: chord name
+                else if (item.chord) {
+                    stepEl.textContent = item.chord;
+                    if (item.duration > 1) {
+                        stepEl.classList.add('sustain-start');
+                        for (let i = 1; i < item.duration; i++) {
+                            const sustainStep = steps[item.step + i];
+                            if (sustainStep) {
+                                sustainStep.classList.add('active');
+                                sustainStep.classList.add(i === item.duration - 1 ? 'sustain-end' : 'sustain-middle');
+                            }
+                        }
+                    }
                 }
             });
-
-            return true;
         }
-        
-        // ============================================
-        // START SESSION
-        // ============================================
-        
-        async function startSession() {
-            // Initialize audio
-            await Tone.start();
 
-            // Release any sustained notes from previous session
-            bassSynth.triggerRelease();
-            chordSynth.releaseAll();
-
-            // Set up transport
+        // ===== TONE.JS TRANSPORT =====
+        function setupToneTransport() {
             Tone.Transport.bpm.value = BPM;
 
-            // Clear any existing beat callback
-            if (beatEventId !== null) {
-                Tone.Transport.clear(beatEventId);
-            }
+            // Schedule step callback
+            Tone.Transport.scheduleRepeat((time) => {
+                // Calculate next step
+                const nextStep = (state.currentStep + 1) % STEPS;
 
-            // Reset beat counter
-            currentBeat = 0;
-
-            // Beat callback - fires on every quarter note
-            beatEventId = Tone.Transport.scheduleRepeat((time) => {
-                // Update UI on main thread with current beat
-                Tone.Draw.schedule(() => {
-                    updateBeatIndicator(currentBeat);
-                }, time);
-
-                // Broadcast beat to players
-                if (channel) {
-                    channel.publish('host', { type: 'beat', beat: currentBeat });
+                // Count loops when we wrap around to step 0
+                if (nextStep === 0 && state.currentStep === STEPS - 1) {
+                    state.loopCount++;
                 }
 
-                // Increment for next beat
-                currentBeat = (currentBeat + 1) % 4;
-            }, '4n');
+                // Play sounds for this step
+                playStepSounds(nextStep, time);
 
-            // Reset transport position to start fresh
-            Tone.Transport.position = 0;
-
-            // Start transport
-            Tone.Transport.start();
-            isPlaying = true;
-
-            // Show end session button
-            document.getElementById('endSessionBtn').classList.remove('hidden');
-
-            // Start timer
-            startTimer();
-            
-            // Notify players with sync data
-            if (channel) {
-                channel.publish('session', {
-                    type: 'session',
-                    status: 'playing',
-                    timeRemaining,
-                    startTime: Date.now(),  // For beat sync
-                    bpm: BPM                // For beat calculation
-                });
-            }
+                // Update visuals
+                Tone.Draw.schedule(() => {
+                    state.currentStep = nextStep;
+                    updatePlayhead();
+                }, time);
+            }, '16n');
         }
-        
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        
-        async function init() {
-            // Generate room code
-            roomCode = generateRoomCode();
-            document.getElementById('roomCode').textContent = roomCode;
-            updateJoinUrls();
 
-            // Track session creation
-            trackEvent('session_created', {
-                room_code: roomCode
+        function playStepSounds(step, time) {
+            // Play drum sounds
+            const drumsPattern = state.instruments.drums.pattern;
+            drumsPattern.forEach(item => {
+                if (item.step === step && item.sound) {
+                    playDrumSound(item.sound, time);
+                }
             });
-            
-            // Set up Ably
-            const ablyReady = await setupAbly();
-            if (!ablyReady) return;
-            
-            // Start button handler
-            document.getElementById('startBtn').addEventListener('click', async () => {
-                document.getElementById('startOverlay').classList.add('hidden');
 
-                // Track session start
-                const playerCount = Object.values(players).filter(p => p.connected).length;
-                trackEvent('session_started', {
-                    room_code: roomCode,
-                    player_count: playerCount
+            // Play percussion sounds
+            const percussionPattern = state.instruments.percussion.pattern;
+            percussionPattern.forEach(item => {
+                if (item.step === step && item.sound) {
+                    playPercussionSound(item.sound, time);
+                }
+            });
+
+            // Play chords (sustained - trigger at start of chord)
+            const chordsPattern = state.instruments.chords.pattern;
+            const chordAtStep = chordsPattern.find(c => c.step === step);
+            if (chordAtStep && chordAtStep.chord) {
+                playChord(chordAtStep.chord, time);
+            }
+
+            // Release chord if we've passed its duration and no new chord is starting
+            const currentChord = chordsPattern.find(c =>
+                step >= c.step && step < c.step + c.duration
+            );
+            if (!currentChord && currentPlayingChord) {
+                releaseChord(time);
+            }
+
+            // Play bass notes (with sustain support)
+            const bassPattern = state.instruments.bass.pattern;
+            // Find note that starts at this step
+            const bassNoteStarting = bassPattern.find(n => n.step === step);
+            // Find note that covers this step (for sustain)
+            const bassNoteCovering = bassPattern.find(n => {
+                const duration = n.duration || 1;
+                return step >= n.step && step < n.step + duration;
+            });
+
+            if (bassNoteStarting && bassNoteStarting.note) {
+                // New note starting - play it
+                playBassNote(bassNoteStarting.note, time);
+            } else if (!bassNoteCovering && currentPlayingBassNote) {
+                // No note covering this step and we have a playing note - release it
+                releaseBassNote(time);
+            }
+            // If bassNoteCovering but not bassNoteStarting, we're in sustain - do nothing
+        }
+
+        function updatePlayhead() {
+            const step = state.currentStep;
+
+            // Update step indicator
+            document.getElementById('currentStep').textContent = step + 1;
+
+            // Update beat dots
+            const currentBeat = Math.floor(step / 4);
+            document.querySelectorAll('.beat-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentBeat);
+            });
+
+            // Update playing state on all grids
+            document.querySelectorAll('.sequence-grid').forEach(grid => {
+                grid.querySelectorAll('.step').forEach((stepEl, i) => {
+                    stepEl.classList.toggle('playing', i === step && stepEl.classList.contains('active'));
                 });
+            });
+        }
 
+        // ===== SESSION CONTROLS =====
+        function setupEventListeners() {
+            // Open room button (enters lobby)
+            document.getElementById('openRoomBtn').addEventListener('click', () => {
+                openLobby();
+            });
+
+            // Start jam button (from lobby)
+            document.getElementById('startJamBtn').addEventListener('click', async () => {
+                document.getElementById('startOverlay').classList.add('hidden');
                 await startSession();
             });
-            
+
+            // Start/End buttons in footer
+            document.getElementById('startBtn').addEventListener('click', startSession);
+            document.getElementById('endBtn').addEventListener('click', () => {
+                if (confirm('End the session early?')) {
+                    endSession(true);
+                }
+            });
+
             // Play again button
             document.getElementById('playAgainBtn').addEventListener('click', () => {
                 document.getElementById('endOverlay').classList.add('hidden');
-                timeRemaining = SESSION_DURATION;
-                totalNotes = 0;
-                document.getElementById('timer').classList.remove('warning');
-                updateTimerDisplay();
-                startSession();
+                resetSession();
+                // Go back to lobby instead of starting immediately
+                document.getElementById('startOverlay').classList.remove('hidden');
+                document.getElementById('welcomeContent').classList.add('hidden');
+                document.getElementById('lobbyContent').classList.add('active');
+                state.phase = 'lobby';
             });
-            
+
             // New room button
             document.getElementById('newRoomBtn').addEventListener('click', () => {
                 window.location.reload();
             });
 
-            // IP update button
+            // IP update button for localhost testing (main view)
             document.getElementById('updateIpBtn').addEventListener('click', () => {
                 const ipInput = document.getElementById('hostIpInput').value.trim();
                 if (ipInput) {
                     // Add http:// if not present, and include port
                     const port = window.location.port || '8000';
                     customHost = ipInput.startsWith('http') ? ipInput : `http://${ipInput}:${port}`;
-                    updateJoinUrls();
+                    generateQRCodes();
+                    generateLobbyQRCodes();
+                    document.getElementById('ipConfig').style.display = 'none';
                 }
             });
 
-            // Allow Enter key in IP input
+            // Allow Enter key in IP input (main view)
             document.getElementById('hostIpInput').addEventListener('keyup', (e) => {
                 if (e.key === 'Enter') {
                     document.getElementById('updateIpBtn').click();
                 }
             });
 
-            // End session button
-            document.getElementById('endSessionBtn').addEventListener('click', () => {
-                if (confirm('Are you sure you want to end the session early?')) {
-                    endSession(true); // ended early
+            // Lobby IP update button
+            document.getElementById('lobbyUpdateIpBtn').addEventListener('click', () => {
+                const ipInput = document.getElementById('lobbyHostIpInput').value.trim();
+                if (ipInput) {
+                    const port = window.location.port || '8000';
+                    customHost = ipInput.startsWith('http') ? ipInput : `http://${ipInput}:${port}`;
+                    generateLobbyQRCodes();
+                    generateQRCodes();  // Also update main session QR codes
+                    document.getElementById('lobbyIpConfig').style.display = 'none';
                 }
             });
 
-            // Survey link tracking
-            document.getElementById('hostSurveyLink').addEventListener('click', () => {
-                trackEvent('survey_clicked', {
-                    source: 'host_end_screen',
-                    room_code: roomCode
-                });
+            // Allow Enter key in lobby IP input
+            document.getElementById('lobbyHostIpInput').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('lobbyUpdateIpBtn').click();
+                }
             });
         }
 
-        // Start when page loads
-        init();
+        function openLobby() {
+            state.phase = 'lobby';
+
+            // Hide welcome, show lobby
+            document.getElementById('welcomeContent').classList.add('hidden');
+            document.getElementById('lobbyContent').classList.add('active');
+
+            // Update room code in lobby
+            document.getElementById('lobbyRoomCode').textContent = state.roomCode;
+
+            // Show IP config if on localhost
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalhost && !customHost) {
+                document.getElementById('lobbyIpConfig').style.display = 'flex';
+            }
+
+            // Generate QR codes for lobby
+            generateLobbyQRCodes();
+
+            // Setup Ably if not already done
+            if (!ably) {
+                setupAbly();
+            }
+
+            trackEvent('lobby_opened', { room_code: state.roomCode });
+        }
+
+        function generateLobbyQRCodes() {
+            let origin = customHost || window.location.origin;
+            const instruments = ['drums', 'percussion', 'bass', 'chords'];
+
+            instruments.forEach(instrument => {
+                const url = `${origin}/${instrument}.html?room=${state.roomCode}`;
+                const container = document.getElementById(`lobby-qr-${instrument}`);
+
+                if (container) {
+                    container.innerHTML = '';
+                    const canvas = document.createElement('canvas');
+                    container.appendChild(canvas);
+
+                    QRCode.toCanvas(canvas, url, {
+                        width: 100,
+                        margin: 1,
+                        color: { dark: '#000000', light: '#ffffff' }
+                    });
+                }
+            });
+        }
+
+        function updateLobbyStatus(instrument, playerName) {
+            const statusEl = document.getElementById(`lobby-status-${instrument}`);
+            if (statusEl) {
+                statusEl.textContent = playerName;
+                statusEl.classList.add('joined');
+            }
+        }
+
+        function resetSession() {
+            state.timeRemaining = SESSION_DURATION;
+            state.loopCount = 0;
+            state.currentStep = -1;
+            document.getElementById('timer').textContent = formatTime(SESSION_DURATION);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function startSession() {
+            // Start audio context
+            await Tone.start();
+
+            // Initialize master bus first (other synths connect to it)
+            if (!masterBus) {
+                initMasterBus();
+            }
+
+            // Initialize synths if not already done
+            if (!drumSynths) {
+                initDrumSynths();
+            }
+            if (!percussionSynths) {
+                initPercussionSynths();
+            }
+            if (!chordSynth) {
+                initChordSynth();
+            }
+            if (!bassSynth) {
+                initBassSynth();
+            }
+
+            state.isPlaying = true;
+            state.phase = 'playing';
+            state.currentStep = -1; // Will become 0 on first advance
+
+            Tone.Transport.start();
+
+            // Start audio visualizer
+            startVisualizer();
+
+            // Broadcast session start to players
+            if (sessionChannel) {
+                sessionChannel.publish('session', {
+                    type: 'session_start',
+                    timeRemaining: state.timeRemaining
+                });
+            }
+
+            // Update UI
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('endBtn').disabled = false;
+
+            // Start timer
+            startTimer();
+
+            trackEvent('session_started', { room_code: state.roomCode });
+        }
+
+        function endSession(endedEarly = false) {
+            state.isPlaying = false;
+            state.phase = 'ended';
+            Tone.Transport.stop();
+
+            // Stop audio visualizer
+            stopVisualizer();
+
+            // Broadcast session end to players
+            if (sessionChannel) {
+                sessionChannel.publish('session', {
+                    type: 'session_end'
+                });
+            }
+
+            // Cancel all scheduled transport events
+            Tone.Transport.cancel();
+
+            // Release any sustained notes immediately
+            const now = Tone.now();
+            if (chordSynth) {
+                try {
+                    chordSynth.releaseAll(now);
+                } catch (e) { console.log('Chord release error:', e); }
+                currentPlayingChord = null;
+            }
+            if (bassSynth) {
+                try {
+                    bassSynth.triggerRelease(now);
+                } catch (e) { console.log('Bass release error:', e); }
+                currentPlayingBassNote = null;
+            }
+
+            // Re-setup the transport schedule for next session
+            setupToneTransport();
+
+            // Update UI
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('endBtn').disabled = true;
+
+            // Clear playhead
+            document.querySelectorAll('.step.playing').forEach(el => {
+                el.classList.remove('playing');
+            });
+
+            // Calculate stats
+            const connectedPlayers = Object.values(state.instruments).filter(i => i.player !== null).length;
+            const durationPlayed = SESSION_DURATION - state.timeRemaining;
+
+            // Update end screen stats
+            document.getElementById('statLoops').textContent = state.loopCount;
+            document.getElementById('statPlayers').textContent = connectedPlayers;
+
+            // Show end overlay
+            document.getElementById('endOverlay').classList.remove('hidden');
+
+            trackEvent('session_ended', {
+                room_code: state.roomCode,
+                completion_type: endedEarly ? 'ended_early' : 'completed',
+                duration_seconds: durationPlayed,
+                total_loops: state.loopCount,
+                total_players: connectedPlayers
+            });
+        }
+
+        function startTimer() {
+            const timerEl = document.getElementById('timer');
+
+            const interval = setInterval(() => {
+                if (!state.isPlaying) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                state.timeRemaining--;
+                timerEl.textContent = formatTime(state.timeRemaining);
+
+                if (state.timeRemaining <= 0) {
+                    clearInterval(interval);
+                    endSession(false);
+                }
+            }, 1000);
+        }
+
+        // ===== START =====
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
