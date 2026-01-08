@@ -168,6 +168,89 @@
         .footer a:hover {
             text-decoration: underline;
         }
+
+        /* Mobile-specific styles */
+        .mobile-message {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .mobile-message .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .mobile-message h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .mobile-message p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .url-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .url-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-family: monospace;
+            outline: none;
+            min-width: 0;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .share-btn {
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .share-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .share-btn.copied {
+            background: #22c55e;
+        }
+
+        .desktop-content, .mobile-content {
+            display: none;
+        }
+
+        /* Hide by default, JS will show appropriate one */
     </style>
 </head>
 <body>
@@ -176,41 +259,132 @@
         <h1>Jam Session</h1>
         <p class="tagline">Make music together with friends</p>
 
-        <div class="instructions">
-            <h2>Before you start</h2>
+        <!-- Desktop content -->
+        <div class="desktop-content" id="desktopContent">
+            <div class="instructions">
+                <h2>Before you start</h2>
 
-            <div class="step">
-                <div class="step-icon">🖥️</div>
-                <div class="step-content">
-                    <h3>Use a computer or TV</h3>
-                    <p>This screen is the host — it plays all the music. Open it on a laptop, desktop, or cast to a TV.</p>
+                <div class="step">
+                    <div class="step-icon">🖥️</div>
+                    <div class="step-content">
+                        <h3>Use a computer or TV</h3>
+                        <p>This screen is the host — it plays all the music. Open it on a laptop, desktop, or cast to a TV.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-icon">🔊</div>
+                    <div class="step-content">
+                        <h3>Turn up the sound</h3>
+                        <p>All audio plays from this device. Make sure your speakers are on and the volume is up.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-icon">📱</div>
+                    <div class="step-content">
+                        <h3>Get your phones ready</h3>
+                        <p>Players will scan QR codes to join on their phones. Each person controls a different instrument.</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="step">
-                <div class="step-icon">🔊</div>
-                <div class="step-content">
-                    <h3>Turn up the sound</h3>
-                    <p>All audio plays from this device. Make sure your speakers are on and the volume is up.</p>
-                </div>
-            </div>
+            <a href="host.html" class="continue-btn" onclick="trackEvent('landing_continue_clicked')">
+                Continue
+            </a>
+        </div>
 
-            <div class="step">
-                <div class="step-icon">📱</div>
-                <div class="step-content">
-                    <h3>Get your phones ready</h3>
-                    <p>Players will scan QR codes to join on their phones. Each person controls a different instrument.</p>
+        <!-- Mobile content -->
+        <div class="mobile-content" id="mobileContent">
+            <div class="mobile-message">
+                <div class="icon">🖥️</div>
+                <h2>Open this on a computer or TV</h2>
+                <p>Jam Session needs a big screen to host the experience. Open this link on a laptop, desktop, or cast to a TV — then use your phone to join as a player.</p>
+
+                <div class="url-box">
+                    <input type="text" id="urlInput" value="https://jam-mvp-xi.vercel.app" readonly>
+                </div>
+
+                <div class="share-buttons">
+                    <button class="share-btn" id="copyBtn" onclick="copyUrl()">
+                        <span id="copyIcon">📋</span>
+                        <span id="copyText">Copy Link</span>
+                    </button>
+                    <button class="share-btn" id="shareBtn" onclick="shareUrl()" style="display: none;">
+                        <span>📤</span>
+                        <span>Share</span>
+                    </button>
                 </div>
             </div>
         </div>
-
-        <a href="host.html" class="continue-btn" onclick="trackEvent('landing_continue_clicked')">
-            Continue
-        </a>
 
         <div class="footer">
             <p>Up to 4 players • 3-minute jam sessions • No app download required</p>
         </div>
     </div>
+
+    <script>
+        // Detect mobile devices
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                || (window.innerWidth <= 768);
+        }
+
+        // Show appropriate content
+        function initPage() {
+            const desktopContent = document.getElementById('desktopContent');
+            const mobileContent = document.getElementById('mobileContent');
+            const shareBtn = document.getElementById('shareBtn');
+
+            if (isMobile()) {
+                mobileContent.style.display = 'block';
+                trackEvent('landing_mobile_detected');
+
+                // Show native share button if available
+                if (navigator.share) {
+                    shareBtn.style.display = 'flex';
+                }
+            } else {
+                desktopContent.style.display = 'block';
+            }
+        }
+
+        // Copy URL to clipboard
+        function copyUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyIcon = document.getElementById('copyIcon');
+            const copyText = document.getElementById('copyText');
+
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                copyBtn.classList.add('copied');
+                copyIcon.textContent = '✓';
+                copyText.textContent = 'Copied!';
+                trackEvent('landing_url_copied');
+
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyIcon.textContent = '📋';
+                    copyText.textContent = 'Copy Link';
+                }, 2000);
+            });
+        }
+
+        // Native share (mobile)
+        function shareUrl() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Jam Session',
+                    text: 'Make music together with friends!',
+                    url: 'https://jam-mvp-xi.vercel.app'
+                }).then(() => {
+                    trackEvent('landing_url_shared');
+                }).catch(() => {});
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
 </body>
 </html>

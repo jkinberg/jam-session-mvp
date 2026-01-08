@@ -54,8 +54,17 @@ Google Analytics 4 (GA4) tracking for Jam Session V1 (Sequencer). Focus on **pro
 ### Landing Page Events (`index.template.html`)
 
 ```javascript
-// User clicks Continue to proceed to host screen
+// Desktop: User clicks Continue to proceed to host screen
 trackEvent('landing_continue_clicked');
+
+// Mobile: User visits landing page on mobile device
+trackEvent('landing_mobile_detected');
+
+// Mobile: User copies the URL
+trackEvent('landing_url_copied');
+
+// Mobile: User shares via native share dialog
+trackEvent('landing_url_shared');
 ```
 
 ---
